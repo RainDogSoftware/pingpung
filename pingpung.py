@@ -39,8 +39,9 @@ class PingPungGui(QtGui.QWidget):
         
         
         outputBox = tabObject.outputBox
-        outputBox.insertPlainText(output)
         outputBox.moveCursor(QtGui.QTextCursor.End)
+        outputBox.insertPlainText("TABID %i - " % result["tabID"] + output)
+        
         
         summaryBox = tabObject.summaryBox
         numGood = tabObject.stats["Success Count"]
