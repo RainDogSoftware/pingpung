@@ -11,6 +11,7 @@ class PingThread(QtCore.QThread):
         self.pingCount = pingCount
         self.interval = interval
         self.tabID = tabID
+        self.result = {"tabID": None}
         super(PingThread, self).__init__()
         
     def run(self):
@@ -18,18 +19,18 @@ class PingThread(QtCore.QThread):
         # Needs improvement
         while (count < self.pingCount) or (self.pingCount == 0):
             count += 1
-            result = pping.do_one(self.ip, 1000, count, 55)
-            result["tabID"] = self.tabID
-            self.emit(QtCore.SIGNAL('complete'), result)
+            self.result = pping.do_one(self.ip, 1000, count, 55, pingID = self.tabID)
+            print(self.result)
+            self.emit(QtCore.SIGNAL('complete'), self.result)
             time.sleep(self.interval)
             
 
 class PingPungGui(QtGui.QWidget):
     
     def showResult(self, result):
-        print(result)
+        #print(result)
         tabObject = self.tabObjects[result["tabID"]]
-        if result["Success"] == True:
+        if result["Success"]:
             tabObject.stats["Success Count"] += 1
             output = "%s %i - %s - from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'], result['Message'], result['Responder'], result['Delay'])
         else:
@@ -84,7 +85,7 @@ class PingPungGui(QtGui.QWidget):
     def populateTab(self, tabObject):
         tabID = next(self.counterIter)
         self.tabObjects[tabID] = tabObject
-                
+        self.threads = []        
         def clearStats():
             return {"Success Count":0,
                     "Fail Count":0}

@@ -238,11 +238,11 @@ def checksum(source_string):
     return answer
   
 #=============================================================================#
-def do_one(destIP, timeout, mySeqNumber, numDataBytes):
+def do_one(destIP, timeout, mySeqNumber, numDataBytes, pingID = None):
     """
     Core pypinglib function.  
     """
-    global myStats
+    #global myStats
   
     delay = None
   
@@ -287,6 +287,8 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
     result["SeqNumber"] = icmpSeqNumber
     result["Delay"] = delay
     result["Timestamp"] = str(datetime.datetime.now()).split('.')[0]
+    if pingID is not None:
+        result["tabID"] = pingID
   
     return result
   
