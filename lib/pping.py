@@ -168,6 +168,7 @@
 #=============================================================================#
 import os, sys, socket, struct, select, time, signal
 import datetime
+import random
   
 if sys.platform == "win32":
     # On Windows, the best timer is time.clock()
@@ -238,7 +239,7 @@ def checksum(source_string):
     return answer
   
 #=============================================================================#
-def do_one(destIP, timeout, mySeqNumber, numDataBytes, pingID = None):
+def do_one(destIP, timeout, mySeqNumber, numDataBytes):
     """
     Core pypinglib function.  
     """
@@ -252,7 +253,9 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes, pingID = None):
         return ("failed. (socket error: '%s')" % e.args[1])
         raise # raise the original error
   
-    my_ID = os.getpid() & 0xFFFF
+    # To make "unique" socket IDs, safer for threading.  
+    # I'd prefer to use something like a UUID but the field requires an int below 65535
+    my_ID = random.randint(1,65500) 
   
     sentTime = send_one_ping(mySocket, destIP, my_ID, mySeqNumber, numDataBytes)
     if sentTime == None:
@@ -287,8 +290,6 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes, pingID = None):
     result["SeqNumber"] = icmpSeqNumber
     result["Delay"] = delay
     result["Timestamp"] = str(datetime.datetime.now()).split('.')[0]
-    if pingID is not None:
-        result["tabID"] = pingID
   
     return result
   
