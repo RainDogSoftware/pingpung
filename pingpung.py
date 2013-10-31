@@ -84,7 +84,8 @@ class PingPungGui(QtGui.QWidget):
     def populateTab(self, tabObject):
         tabID = next(self.counterIter)
         self.tabObjects[tabID] = tabObject
-        self.threads = []        
+        self.threads = []  
+        print(type(tabObject))        
         def clearStats():
             return {"Success Count":0,
                     "Fail Count":0}
@@ -94,6 +95,8 @@ class PingPungGui(QtGui.QWidget):
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
         
+            tabObject.setTabText(ip)
+            
             outputText = "Starting ping to %s. \n Interval: %i seconds \n Count: %i \n" % (ip, interval, pingCount)
             tabObject.outputBox.insertPlainText(outputText) 
         
