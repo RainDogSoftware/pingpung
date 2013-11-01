@@ -168,8 +168,10 @@
 #=============================================================================#
 import os, sys, socket, struct, select, time, signal
 import datetime
-import random
-  
+import itertools
+
+id_gen = itertools.cycle(range(0,65535))
+
 if sys.platform == "win32":
     # On Windows, the best timer is time.clock()
     default_timer = time.clock
@@ -253,9 +255,11 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
         return ("failed. (socket error: '%s')" % e.args[1])
         raise # raise the original error
   
-    # To make "unique" socket IDs, safer for threading.  
-    # I'd prefer to use something like a UUID but the field requires an int below 65535
-    my_ID = random.randint(1,65500) 
+    # To make "unique" socket IDs, safe for threading.  
+    # Each ping gets a socket ID number from a 1-65535 cycling iterator.  
+    # Theoretically, this means that it can support over 65000 simultaneous pings
+    # without worrying about a socket ID clash
+    my_ID = next(id_gen)
   
     sentTime = send_one_ping(mySocket, destIP, my_ID, mySeqNumber, numDataBytes)
     if sentTime == None:
@@ -400,6 +404,9 @@ def dump_stats():
   
     print()
     return
+#=============================================================================#  
+
+
   
 #=============================================================================#
 def signal_handler(signum, frame):

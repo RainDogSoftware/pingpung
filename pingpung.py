@@ -20,7 +20,7 @@ class PingThread(QtCore.QThread):
             count += 1
             self.result = pping.do_one(self.ip, 1000, count, 55)
             self.result["tabID"] = self.tabID
-            print(self.result)
+            #print(self.result)
             self.emit(QtCore.SIGNAL('complete'), self.result)
             time.sleep(self.interval)
 
@@ -36,12 +36,10 @@ class PingPungGui(QtGui.QWidget):
             tabObject.stats["Fail Count"] += 1
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
                 
-        
-        
         outputBox = tabObject.outputBox
         outputBox.moveCursor(QtGui.QTextCursor.End)
-        outputBox.insertPlainText("TABID %i - " % result["tabID"] + output)
-        
+        outputBox.insertPlainText(output)
+        outputBox.moveCursor(QtGui.QTextCursor.End)
         
         summaryBox = tabObject.summaryBox
         numGood = tabObject.stats["Success Count"]
@@ -63,7 +61,7 @@ class PingPungGui(QtGui.QWidget):
         self.tabWidget = QtGui.QTabWidget()
         self.newTab("Initial Tab")
         
-    def newTab(self, name="New Tab"):
+    def newTab(self, *args, name = "New Tab"):
         self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), name)
         
     def initUI(self):
@@ -77,15 +75,15 @@ class PingPungGui(QtGui.QWidget):
         self.setLayout(mainLayout)
     
         self.show()    
-        self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Second Tab")
-        self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Third Tab")
+        #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Second Tab")
+        #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Third Tab")
         
     ############# Main GUI Building function ###################
     def populateTab(self, tabObject):
         tabID = next(self.counterIter)
         self.tabObjects[tabID] = tabObject
         self.threads = []  
-        print(type(tabObject))        
+        
         def clearStats():
             return {"Success Count":0,
                     "Fail Count":0}
@@ -94,8 +92,7 @@ class PingPungGui(QtGui.QWidget):
             ip = tabObject.ipBox.text()
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
-        
-            tabObject.setTabText(ip)
+            self.tabWidget.setTabText(tabID, ip)
             
             outputText = "Starting ping to %s. \n Interval: %i seconds \n Count: %i \n" % (ip, interval, pingCount)
             tabObject.outputBox.insertPlainText(outputText) 
@@ -112,7 +109,10 @@ class PingPungGui(QtGui.QWidget):
         tabObject.stats = clearStats()
         
         tabLayout = QtGui.QGridLayout()
-        #tabLayout.setSpacing(10)
+        
+        tabObject.newTabButton = QtGui.QPushButton("New Tab", self)
+        tabObject.newTabButton.clicked.connect(self.newTab)
+        tabLayout.addWidget(tabObject.newTabButton,0,1)
         
         # Ip address box
         tabObject.ipLabel = QtGui.QLabel("Remote IP Address")
@@ -144,8 +144,7 @@ class PingPungGui(QtGui.QWidget):
         
         # Output Box
         tabObject.outputBox = QtGui.QPlainTextEdit()
-        tabObject.outputBox.insertPlainText("Enter an IP address above and click Start.  \
-                                       A ping count of zero means infinite.\n")
+        tabObject.outputBox.insertPlainText("Enter an IP address above and click Start. \n")
         tabObject.outputBox.setReadOnly(True)
                                        
         # Summary Box
