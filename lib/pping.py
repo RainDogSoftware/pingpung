@@ -188,16 +188,6 @@ ICMP_MAX_RECV   = 2048 # Max size of incoming buffer
   
 MAX_SLEEP = 1000
   
-class MyStats:
-    thisIP   = "0.0.0.0"
-    pktsSent = 0
-    pktsRcvd = 0
-    minTime  = 999999999
-    maxTime  = 0
-    totTime  = 0
-    fracLoss = 1.0
-  
-myStats = MyStats # Used globally
   
 #=============================================================================#
 def checksum(source_string):
@@ -245,7 +235,7 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
     """
     Core pypinglib function.  
     """
-    #global myStats
+
   
     delay = None
   
@@ -255,20 +245,19 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
         return ("failed. (socket error: '%s')" % e.args[1])
         raise # raise the original error
   
-    # To make "unique" socket IDs, safe for threading.  
+    # To make "unique" socket IDs for safe threading.  
     # Each ping gets a socket ID number from a 1-65535 cycling iterator.  
     # Theoretically, this means that it can support over 65000 simultaneous pings
     # without worrying about a socket ID clash
-    my_ID = next(id_gen)
+    socketID = next(id_gen)
   
-    sentTime = send_one_ping(mySocket, destIP, my_ID, mySeqNumber, numDataBytes)
+    sentTime = send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
     if sentTime == None:
         mySocket.close()
         return delay
   
-    myStats.pktsSent += 1;
   
-    recvTime, dataSize, iphSrcIP, icmpSeqNumber, iphTTL = receive_one_ping(mySocket, my_ID, timeout)
+    recvTime, dataSize, iphSrcIP, icmpSeqNumber, iphTTL = receive_one_ping(mySocket, socketID, timeout)
   
     mySocket.close()
     
@@ -279,12 +268,7 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
         result["Success"] = True
         result["Message"] = "Success"
         
-        myStats.pktsRcvd += 1;
-        myStats.totTime += delay
-        if myStats.minTime > delay:
-            myStats.minTime = delay
-        if myStats.maxTime < delay:
-            myStats.maxTime = delay
+
     else:
         delay = None
         result["Success"] = False
@@ -298,7 +282,7 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
     return result
   
 #=============================================================================#
-def send_one_ping(mySocket, destIP, myID, mySeqNumber, numDataBytes):
+def send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
     """
     Send one ping to the given >destIP<.
     """
@@ -312,7 +296,7 @@ def send_one_ping(mySocket, destIP, myID, mySeqNumber, numDataBytes):
   
     # Make a dummy heder with a 0 checksum.
     header = struct.pack(
-        "!BBHHH", ICMP_ECHO, 0, myChecksum, myID, mySeqNumber
+        "!BBHHH", ICMP_ECHO, 0, myChecksum, socketID, mySeqNumber
     )
   
     padBytes = []
@@ -327,7 +311,7 @@ def send_one_ping(mySocket, destIP, myID, mySeqNumber, numDataBytes):
     # Now that we have the right checksum, we put that in. It's just easier
     # to make up a new header than to stuff it into the dummy.
     header = struct.pack(
-        "!BBHHH", ICMP_ECHO, 0, myChecksum, myID, mySeqNumber
+        "!BBHHH", ICMP_ECHO, 0, myChecksum, socketID, mySeqNumber
     )
   
     packet = header + data
@@ -343,7 +327,7 @@ def send_one_ping(mySocket, destIP, myID, mySeqNumber, numDataBytes):
     return sendTime
   
 #=============================================================================#
-def receive_one_ping(mySocket, myID, timeout):
+def receive_one_ping(mySocket, socketID, timeout):
     """
     Receive the ping from the socket. Timeout = in ms
     """
@@ -373,7 +357,7 @@ def receive_one_ping(mySocket, myID, timeout):
             "!BBHHH", icmpHeader
         )
   
-        if icmpPacketID == myID: # Our packet
+        if icmpPacketID == socketID: # Our packet
             dataSize = len(recPacket) - 28
             return timeReceived, dataSize, iphSrcIP, icmpSeqNumber, iphTTL
   
@@ -381,31 +365,6 @@ def receive_one_ping(mySocket, myID, timeout):
         if timeLeft <= 0:
             return None, 0, 0, 0, 0
   
-#=============================================================================#
-def dump_stats():
-    """
-    Show stats when pings are done
-    """
-    global myStats
-  
-    print("\n----%s PYTHON PING Statistics----" % (myStats.thisIP))
-  
-    if myStats.pktsSent > 0:
-        myStats.fracLoss = (myStats.pktsSent - myStats.pktsRcvd)/myStats.pktsSent
-  
-    print("%d packets transmitted, %d packets received, %0.1f%% packet loss" % (
-        myStats.pktsSent, myStats.pktsRcvd, 100.0 * myStats.fracLoss
-    ))
-  
-    if myStats.pktsRcvd > 0:
-        print("round-trip (ms)  min/avg/max = %d/%0.1f/%d" % (
-            myStats.minTime, myStats.totTime/myStats.pktsRcvd, myStats.maxTime
-        ))
-  
-    print()
-    return
-#=============================================================================#  
-
 
   
 #=============================================================================#
@@ -413,7 +372,6 @@ def signal_handler(signum, frame):
     """
     Handle exit via signals
     """
-    dump_stats()
     print("\n(Terminated with signal %d)\n" % (signum))
     sys.exit(0)
   
