@@ -62,7 +62,8 @@ class PingPungGui(QtGui.QWidget):
         self.newTab("Initial Tab")
         
     def newTab(self, *args, name = "New Tab"):
-        self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), name)
+        index = self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), name)
+        self.tabWidget.setCurrentIndex(index)
         
     def removeTab(self, tabID):
         if tabID != 0:
