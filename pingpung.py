@@ -64,6 +64,12 @@ class PingPungGui(QtGui.QWidget):
     def newTab(self, *args, name = "New Tab"):
         self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), name)
         
+    def removeTab(self, tabID):
+        if tabID != 0:
+            self.tabWidget.removeTab(tabID)
+        print(tabID)
+        #print(other)
+        
     def initUI(self):
         self.setGeometry(100, 100, 800, 600)
         self.setWindowTitle('PingPung')
@@ -92,7 +98,7 @@ class PingPungGui(QtGui.QWidget):
             ip = tabObject.ipBox.text()
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
-            self.tabWidget.setTabText(tabID, ip)
+            self.tabWidget.setTabText(self.tabWidget.currentIndex(), ip)
             
             outputText = "Starting ping to %s. \n Interval: %i seconds \n Count: %i \n" % (ip, interval, pingCount)
             tabObject.outputBox.insertPlainText(outputText) 
@@ -110,9 +116,15 @@ class PingPungGui(QtGui.QWidget):
         
         tabLayout = QtGui.QGridLayout()
         
+        # New Tab
         tabObject.newTabButton = QtGui.QPushButton("New Tab", self)
         tabObject.newTabButton.clicked.connect(self.newTab)
         tabLayout.addWidget(tabObject.newTabButton,0,1)
+        
+        # Close tab
+        tabObject.closeTabButton = QtGui.QPushButton("Close Tab", self)
+        tabObject.closeTabButton.clicked.connect(lambda: self.removeTab(self.tabWidget.currentIndex()))
+        tabLayout.addWidget(tabObject.closeTabButton,0,2)
         
         # Ip address box
         tabObject.ipLabel = QtGui.QLabel("Remote IP Address")
