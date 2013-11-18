@@ -68,8 +68,6 @@ class PingPungGui(QtGui.QWidget):
     def removeTab(self, tabID):
         if tabID != 0:
             self.tabWidget.removeTab(tabID)
-        print(tabID)
-        #print(other)
         
     def initUI(self):
         self.setGeometry(100, 100, 800, 600)
@@ -107,11 +105,16 @@ class PingPungGui(QtGui.QWidget):
             tabObject.thread = PingThread(ip, pingCount, interval, tabID)
             self.connect_slots(tabObject.thread)
             tabObject.thread.start()
+            tabObject.startPingButton.setEnabled(False)
+            tabObject.stopPingButton.setEnabled(True)
+
 
         def stopPing(*args):
             tabObject.outputBox.insertPlainText("Stopping!\n")
             tabObject.thread.terminate()
             tabObject.stats = clearStats()
+            tabObject.startPingButton.setEnabled(True)
+            tabObject.stopPingButton.setEnabled(False)
             
         tabObject.stats = clearStats()
         
@@ -127,44 +130,52 @@ class PingPungGui(QtGui.QWidget):
         tabObject.closeTabButton.clicked.connect(lambda: self.removeTab(self.tabWidget.currentIndex()))
         tabLayout.addWidget(tabObject.closeTabButton,0,2)
         
+        # Spacing hacks.  TODO:  learn better QT layout =P
+        tabObject.ipLabel = QtGui.QLabel("")
+        tabLayout.addWidget(tabObject.ipLabel,1,1)
+        for i in range(4,11):
+          tabObject.ipLabel = QtGui.QLabel("              ")
+          tabLayout.addWidget(tabObject.ipLabel,0,i)
+        
         # Ip address box
         tabObject.ipLabel = QtGui.QLabel("Remote IP Address")
-        tabLayout.addWidget(tabObject.ipLabel,1,1)
+        tabLayout.addWidget(tabObject.ipLabel,2,1)
         tabObject.ipBox = QtGui.QLineEdit("8.8.8.8")
-        tabLayout.addWidget(tabObject.ipBox,2,1)
+        tabLayout.addWidget(tabObject.ipBox,3,1)
         
         # Ping count box
         tabObject.pingCountLabel = QtGui.QLabel("Count (0=infinite)")
-        tabLayout.addWidget(tabObject.pingCountLabel,1,2)
+        tabLayout.addWidget(tabObject.pingCountLabel,2,2)
         tabObject.pingCountBox = QtGui.QLineEdit("0")
-        tabLayout.addWidget(tabObject.pingCountBox,2,2)
+        tabLayout.addWidget(tabObject.pingCountBox,3,2)
         
         # Interval Box
         tabObject.intervalLabel = QtGui.QLabel("Interval (seconds)")
-        tabLayout.addWidget(tabObject.intervalLabel,1,3)
+        tabLayout.addWidget(tabObject.intervalLabel,2,3)
         tabObject.intervalBox = QtGui.QLineEdit("1")
-        tabLayout.addWidget(tabObject.intervalBox, 2,3)
+        tabLayout.addWidget(tabObject.intervalBox, 3,3)
         
         # Start Button
-        tabObject.button = QtGui.QPushButton('Start', self)
-        tabObject.button.clicked.connect(startPing)
-        tabLayout.addWidget(tabObject.button,2,4)
+        tabObject.startPingButton = QtGui.QPushButton('Start', self)
+        tabObject.startPingButton.clicked.connect(startPing)
+        tabLayout.addWidget(tabObject.startPingButton,3,11)
         
         # Stop Button
-        tabObject.button = QtGui.QPushButton('Stop', self)
-        tabObject.button.clicked.connect(stopPing)
-        tabLayout.addWidget(tabObject.button,2,5)
+        tabObject.stopPingButton = QtGui.QPushButton('Stop', self)
+        tabObject.stopPingButton.clicked.connect(stopPing)
+        tabObject.stopPingButton.setEnabled(False)
+        tabLayout.addWidget(tabObject.stopPingButton,3,12)
         
         # Output Box
         tabObject.outputBox = QtGui.QPlainTextEdit()
         tabObject.outputBox.insertPlainText("Enter an IP address above and click Start. \n")
         tabObject.outputBox.setReadOnly(True)
-                                       
+        tabLayout.addWidget(tabObject.outputBox,4,1,16,10)
+        
         # Summary Box
         tabObject.summaryBox = QtGui.QPlainTextEdit()
-        tabLayout.addWidget(tabObject.summaryBox,3,4,6,2)
+        tabLayout.addWidget(tabObject.summaryBox,4,11,14,8)
         
-        tabLayout.addWidget(tabObject.outputBox,3,1,6,3)
         tabObject.setLayout(tabLayout)
         
         return tabObject
