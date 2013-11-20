@@ -116,6 +116,16 @@ class PingPungGui(QtGui.QWidget):
             tabObject.startPingButton.setEnabled(True)
             tabObject.stopPingButton.setEnabled(False)
             
+        def clearLog(*args):
+            tabObject.outputBox.clear()
+            
+        def saveLog(*args):
+            file_types = "Plain Text (*.txt);;Plain Text (*.log)"
+            filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', file_types)
+            fname = open(filename, 'w')
+            fname.write(tabObject.outputBox.toPlainText())
+            fname.close() 
+            
         tabObject.stats = clearStats()
         
         tabLayout = QtGui.QGridLayout()
@@ -174,7 +184,17 @@ class PingPungGui(QtGui.QWidget):
         
         # Summary Box
         tabObject.summaryBox = QtGui.QPlainTextEdit()
-        tabLayout.addWidget(tabObject.summaryBox,4,11,14,8)
+        tabLayout.addWidget(tabObject.summaryBox,4,11,15,8)
+        
+        # Clear Log button
+        tabObject.clearLogButton = QtGui.QPushButton('Clear Log', self)
+        tabObject.clearLogButton.clicked.connect(clearLog)
+        tabLayout.addWidget(tabObject.clearLogButton,19,11)        
+        
+        # Save Log button
+        tabObject.saveLogButton = QtGui.QPushButton('Save Log', self)
+        tabObject.saveLogButton.clicked.connect(saveLog)
+        tabLayout.addWidget(tabObject.saveLogButton,19,12)
         
         tabObject.setLayout(tabLayout)
         
