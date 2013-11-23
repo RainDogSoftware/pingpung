@@ -18,15 +18,14 @@ class PingThread(QtCore.QThread):
         # Needs improvement
         while (count < self.pingCount) or (self.pingCount == 0):
             count += 1
-            self.result = pping.do_one(self.ip, 1000, count, 55)
+            self.result = pping.ping(self.ip, 1000, count, 55)
             self.result["tabID"] = self.tabID
-            #print(self.result)
             self.emit(QtCore.SIGNAL('complete'), self.result)
             time.sleep(self.interval)
 
 class PingPungGui(QtGui.QWidget):
     
-    def showResult(self, result):
+    def show_result(self, result):
         #print(result)
         tabObject = self.tabObjects[result["tabID"]]
         if result["Success"]:
@@ -48,33 +47,33 @@ class PingPungGui(QtGui.QWidget):
         summaryBox.setPlainText("Success Count:    %i \nFail Count:       %i \nPercent Success:  %i" % (numGood, numBad,percent))
     
     def connect_slots(self, sender):
-        self.connect(sender, QtCore.SIGNAL('complete'), self.showResult)
+        self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
     
     def __init__(self):
         super(PingPungGui, self).__init__()
         self.counterIter = count()
         self.tabObjects = {}
-        self.initUI()
+        self.init_ui()
         
-    def initTabs(self):
+    def init_tabs(self):
         # returns layout containing tab bar
         self.tabWidget = QtGui.QTabWidget()
-        self.newTab("Initial Tab")
+        self.new_tab("Initial Tab")
         
-    def newTab(self, *args, name = "New Tab"):
-        index = self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), name)
+    def new_tab(self, *args, name = "New Tab"):
+        index = self.tabWidget.addTab(self.populate_tab(QtGui.QWidget()), name)
         self.tabWidget.setCurrentIndex(index)
         
-    def removeTab(self, tabID):
+    def remove_tab(self, tabID):
         if tabID != 0:
             self.tabWidget.removeTab(tabID)
         
-    def initUI(self):
+    def init_ui(self):
         self.setGeometry(100, 100, 800, 600)
         self.setWindowTitle('PingPung')
         self.setWindowIcon(QtGui.QIcon('web.png'))
         
-        self.initTabs()
+        self.init_tabs()
         mainLayout = QtGui.QGridLayout()
         mainLayout.addWidget(self.tabWidget)
         self.setLayout(mainLayout)
@@ -84,16 +83,16 @@ class PingPungGui(QtGui.QWidget):
         #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Third Tab")
         
     ############# Main GUI Building function ###################
-    def populateTab(self, tabObject):
+    def populate_tab(self, tabObject):
         tabID = next(self.counterIter)
         self.tabObjects[tabID] = tabObject
         self.threads = []  
         
-        def clearStats():
+        def clear_stats():
             return {"Success Count":0,
                     "Fail Count":0}
                                   
-        def startPing(*args):
+        def start_ping(*args):
             ip = tabObject.ipBox.text()
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
@@ -109,35 +108,35 @@ class PingPungGui(QtGui.QWidget):
             tabObject.stopPingButton.setEnabled(True)
 
 
-        def stopPing(*args):
+        def stop_ping(*args):
             tabObject.outputBox.insertPlainText("Stopping!\n")
             tabObject.thread.terminate()
-            tabObject.stats = clearStats()
+            tabObject.stats = clear_stats()
             tabObject.startPingButton.setEnabled(True)
             tabObject.stopPingButton.setEnabled(False)
             
-        def clearLog(*args):
+        def clear_log(*args):
             tabObject.outputBox.clear()
             
-        def saveLog(*args):
+        def save_log(*args):
             file_types = "Plain Text (*.txt);;Plain Text (*.log)"
             filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', file_types)
             fname = open(filename, 'w')
             fname.write(tabObject.outputBox.toPlainText())
             fname.close() 
             
-        tabObject.stats = clearStats()
+        tabObject.stats = clear_stats()
         
         tabLayout = QtGui.QGridLayout()
         
         # New Tab
         tabObject.newTabButton = QtGui.QPushButton("New Tab", self)
-        tabObject.newTabButton.clicked.connect(self.newTab)
+        tabObject.newTabButton.clicked.connect(self.new_tab)
         tabLayout.addWidget(tabObject.newTabButton,0,1)
         
         # Close tab
         tabObject.closeTabButton = QtGui.QPushButton("Close Tab", self)
-        tabObject.closeTabButton.clicked.connect(lambda: self.removeTab(self.tabWidget.currentIndex()))
+        tabObject.closeTabButton.clicked.connect(lambda: self.remove_tab(self.tabWidget.currentIndex()))
         tabLayout.addWidget(tabObject.closeTabButton,0,2)
         
         # Spacing hacks.  TODO:  learn better QT layout =P
@@ -167,12 +166,12 @@ class PingPungGui(QtGui.QWidget):
         
         # Start Button
         tabObject.startPingButton = QtGui.QPushButton('Start', self)
-        tabObject.startPingButton.clicked.connect(startPing)
+        tabObject.startPingButton.clicked.connect(start_ping)
         tabLayout.addWidget(tabObject.startPingButton,3,11)
         
         # Stop Button
         tabObject.stopPingButton = QtGui.QPushButton('Stop', self)
-        tabObject.stopPingButton.clicked.connect(stopPing)
+        tabObject.stopPingButton.clicked.connect(stop_ping)
         tabObject.stopPingButton.setEnabled(False)
         tabLayout.addWidget(tabObject.stopPingButton,3,12)
         
@@ -188,12 +187,12 @@ class PingPungGui(QtGui.QWidget):
         
         # Clear Log button
         tabObject.clearLogButton = QtGui.QPushButton('Clear Log', self)
-        tabObject.clearLogButton.clicked.connect(clearLog)
+        tabObject.clearLogButton.clicked.connect(clear_log)
         tabLayout.addWidget(tabObject.clearLogButton,19,11)        
         
         # Save Log button
         tabObject.saveLogButton = QtGui.QPushButton('Save Log', self)
-        tabObject.saveLogButton.clicked.connect(saveLog)
+        tabObject.saveLogButton.clicked.connect(save_log)
         tabLayout.addWidget(tabObject.saveLogButton,19,12)
         
         tabObject.setLayout(tabLayout)

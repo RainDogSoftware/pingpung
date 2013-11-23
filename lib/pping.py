@@ -166,7 +166,7 @@
 """
   
 #=============================================================================#
-import os, sys, socket, struct, select, time, signal
+import sys, socket, struct, select, time
 import datetime
 import itertools
 
@@ -231,18 +231,17 @@ def checksum(source_string):
     return answer
   
 #=============================================================================#
-def do_one(destIP, timeout, mySeqNumber, numDataBytes):
+def ping(destIP, timeout, mySeqNumber, numDataBytes):
     """
     Core pypinglib function.  
     """
 
-  
     delay = None
   
     try: # One could use UDP here, but it's obscure
         mySocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
     except socket.error as e:
-        return ("failed. (socket error: '%s')" % e.args[1])
+        #return ("failed. (socket error: '%s')" % e.args[1])
         raise # raise the original error
   
     # To make "unique" socket IDs for safe threading.  
@@ -251,13 +250,12 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
     # without worrying about a socket ID clash
     socketID = next(id_gen)
   
-    sentTime = send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
+    sentTime = _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
     if sentTime == None:
         mySocket.close()
         return delay
-  
-  
-    recvTime, dataSize, iphSrcIP, icmpSeqNumber, iphTTL = receive_one_ping(mySocket, socketID, timeout)
+
+    recvTime, dataSize, iphSrcIP, icmpSeqNumber, iphTTL = _receive_one_ping(mySocket, socketID, timeout)
   
     mySocket.close()
     
@@ -282,7 +280,7 @@ def do_one(destIP, timeout, mySeqNumber, numDataBytes):
     return result
   
 #=============================================================================#
-def send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
+def _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
     """
     Send one ping to the given >destIP<.
     """
@@ -327,7 +325,7 @@ def send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
     return sendTime
   
 #=============================================================================#
-def receive_one_ping(mySocket, socketID, timeout):
+def _receive_one_ping(mySocket, socketID, timeout):
     """
     Receive the ping from the socket. Timeout = in ms
     """
@@ -367,13 +365,7 @@ def receive_one_ping(mySocket, socketID, timeout):
   
 
   
-#=============================================================================#
-def signal_handler(signum, frame):
-    """
-    Handle exit via signals
-    """
-    print("\n(Terminated with signal %d)\n" % (signum))
-    sys.exit(0)
+
   
 
  
