@@ -198,34 +198,31 @@ def checksum(source_string):
     Network data is big-endian, hosts are typically little-endian
     """
     countTo = (int(len(source_string)/2))*2
-    sum = 0
+    _sum = 0
     count = 0
-  
-    # Handle bytes in pairs (decoding as short ints)
-    loByte = 0
-    hiByte = 0
+
     while count < countTo:
-        if (sys.byteorder == "little"):
+        if sys.byteorder == "little":
             loByte = source_string[count]
             hiByte = source_string[count + 1]
         else:
             loByte = source_string[count + 1]
             hiByte = source_string[count]
-        sum = sum + (hiByte * 256 + loByte)
+        _sum += hiByte * 256 + loByte
         count += 2
   
     # Handle last byte if applicable (odd-number of bytes)
     # Endianness should be irrelevant in this case
     if countTo < len(source_string): # Check for odd length
         loByte = source_string[len(source_string)-1]
-        sum += loByte
+        _sum += loByte
   
-    sum &= 0xffffffff # Truncate sum to 32 bits (a variance from ping.c, which
+    _sum &= 0xffffffff # Truncate _sum to 32 bits (a variance from ping.c, which
                       # uses signed ints, but overflow is unlikely in ping)
   
-    sum = (sum >> 16) + (sum & 0xffff)    # Add high 16 bits to low 16 bits
-    sum += (sum >> 16)                    # Add carry from above (if any)
-    answer = ~sum & 0xffff              # Invert and truncate to 16 bits
+    _sum = (_sum >> 16) + (_sum & 0xffff)    # Add high 16 bits to low 16 bits
+    _sum += (_sum >> 16)                    # Add carry from above (if any)
+    answer = ~_sum & 0xffff              # Invert and truncate to 16 bits
     answer = socket.htons(answer)
   
     return answer
@@ -240,8 +237,7 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
   
     try: # One could use UDP here, but it's obscure
         mySocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
-    except socket.error as e:
-        #return ("failed. (socket error: '%s')" % e.args[1])
+    except socket.error:
         raise # raise the original error
   
     # To make "unique" socket IDs for safe threading.  
@@ -251,7 +247,7 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
     socketID = next(id_gen)
   
     sentTime = _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
-    if sentTime == None:
+    if sentTime is None:
         mySocket.close()
         return delay
 
@@ -265,8 +261,6 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
         
         result["Success"] = True
         result["Message"] = "Success"
-        
-
     else:
         delay = None
         result["Success"] = False
@@ -299,7 +293,7 @@ def _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
   
     padBytes = []
     startVal = 0x42
-    for i in range(startVal, startVal + (numDataBytes)):
+    for i in range(startVal, startVal + numDataBytes):
         padBytes += [(i & 0xff)]  # Keep chars in the 0-255 range
     data = bytes(padBytes)
   
@@ -335,7 +329,7 @@ def _receive_one_ping(mySocket, socketID, timeout):
         startedSelect = time.time()
         whatReady = select.select([mySocket], [], [], timeLeft)
         howLongInSelect = (time.time() - startedSelect)
-        if whatReady[0] == []: # Timeout
+        if not whatReady[0]: # Timeout
             return None, 0, 0, 0, 0
   
         timeReceived = time.time()
