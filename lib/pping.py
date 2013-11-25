@@ -187,8 +187,13 @@ ICMP_ECHO       =    8 # Echo request (per RFC792)
 ICMP_MAX_RECV   = 2048 # Max size of incoming buffer
   
 MAX_SLEEP = 1000
+#=============================================================================#
+# Exceptions
+class SocketError(Exception):
+    pass  
   
-  
+class AddressError(Exception):
+    pass
 #=============================================================================#
 def checksum(source_string):
     """
@@ -238,7 +243,7 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
     try: # One could use UDP here, but it's obscure
         mySocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
     except socket.error:
-        raise # raise the original error
+        raise SocketError
   
     # To make "unique" socket IDs for safe threading.  
     # Each ping gets a socket ID number from a 1-65535 cycling iterator.  
@@ -246,10 +251,10 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
     # without worrying about a socket ID clash
     socketID = next(id_gen)
   
-    sentTime = _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
-    if sentTime is None:
-        mySocket.close()
-        return delay
+    try:
+        sentTime = _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
+    except AddressError:
+        raise
 
     recvTime, dataSize, iphSrcIP, icmpSeqNumber, iphTTL = _receive_one_ping(mySocket, socketID, timeout)
   
@@ -281,7 +286,7 @@ def _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
     try:
         destIP  =  socket.gethostbyname(destIP)
     except socket.error:
-        return 
+        raise AddressError
   
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
     myChecksum = 0
@@ -313,8 +318,7 @@ def _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
     try:
         mySocket.sendto(packet, (destIP, 1)) # Port number is irrelevant for ICMP
     except socket.error as e:
-        print("General failure (%s)" % (e.args[1]))
-        return 
+        raise SocketError 
   
     return sendTime
   

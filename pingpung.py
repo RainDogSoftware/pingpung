@@ -2,6 +2,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 from lib import pping
 import time
+import ipaddress
 from itertools import count
 
 class PingThread(QtCore.QThread):
@@ -15,18 +16,25 @@ class PingThread(QtCore.QThread):
         
     def run(self):
         count = 0
-        # Needs improvement
         while (count < self.pingCount) or (self.pingCount == 0):
             count += 1
-            self.result = pping.ping(self.ip, 1000, count, 55)
-            self.result["tabID"] = self.tabID
-            self.emit(QtCore.SIGNAL('complete'), self.result)
-            time.sleep(self.interval)
+            try:
+                self.result = pping.ping(self.ip, 1000, count, 55)
+            except pping.SocketError:
+                self.emit(QtCore.SIGNAL('error'), "Socket error.  Verify that program is running as root/admin.")
+                break
+            except pping.AddressError:
+                self.emit(QtCore.SIGNAL('error'), "Address error.  Bad IP address or domain name.")
+                break
+            else:
+                self.result["tabID"] = self.tabID
+                self.emit(QtCore.SIGNAL('complete'), self.result)
+                time.sleep(self.interval)
+                
 
 class PingPungGui(QtGui.QWidget):
     
     def show_result(self, result):
-        #print(result)
         tabObject = self.tabObjects[result["tabID"]]
         if result["Success"]:
             tabObject.stats["Success Count"] += 1
@@ -48,6 +56,7 @@ class PingPungGui(QtGui.QWidget):
     
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
+        self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
     
     def __init__(self):
         super(PingPungGui, self).__init__()
@@ -82,6 +91,10 @@ class PingPungGui(QtGui.QWidget):
         #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Second Tab")
         #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Third Tab")
         
+    def show_error(self, message):
+            QtGui.QMessageBox.about(self, "OH TEH NOES!", message)
+    
+        
     ############# Main GUI Building function ###################
     def populate_tab(self, tabObject):
         tabID = next(self.counterIter)
@@ -94,6 +107,9 @@ class PingPungGui(QtGui.QWidget):
                                   
         def start_ping(*args):
             ip = tabObject.ipBox.text()
+            
+            
+
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
             self.tabWidget.setTabText(self.tabWidget.currentIndex(), ip)
@@ -103,6 +119,7 @@ class PingPungGui(QtGui.QWidget):
         
             tabObject.thread = PingThread(ip, pingCount, interval, tabID)
             self.connect_slots(tabObject.thread)
+            
             tabObject.thread.start()
             tabObject.startPingButton.setEnabled(False)
             tabObject.stopPingButton.setEnabled(True)
@@ -121,9 +138,13 @@ class PingPungGui(QtGui.QWidget):
         def save_log(*args):
             file_types = "Plain Text (*.txt);;Plain Text (*.log)"
             filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', file_types)
-            fname = open(filename, 'w')
-            fname.write(tabObject.outputBox.toPlainText())
-            fname.close() 
+            try:
+                fname = open(filename, 'w')
+                fname.write(tabObject.outputBox.toPlainText())
+                fname.close() 
+                raise Exception
+            except: #Yeah, I know, blanket exceptions are not a great idea.  This won't stay this way forever.  
+                self.show_error("Unable to save log file")
             
         tabObject.stats = clear_stats()
         
