@@ -33,9 +33,17 @@
   
     Enhancements by Martin Falatic:
       -> http://www.falatic.com/index.php/39/pinging-with-python
+      
+    Library rewrite for QT application by Josh Price
+      -> https://github.com/RainDogSoftware/pingpung
   
     Revision history
     ~~~~~~~~~~~~~~~~
+    November 2013
+    --------------
+    Large overhaul to turn this application into a library for PingPung
+    https://github.com/RainDogSoftware/pingpung
+    - Josh Price
   
     October 12, 2011
     --------------
@@ -333,6 +341,7 @@ def _receive_one_ping(mySocket, socketID, timeout):
         startedSelect = time.time()
         whatReady = select.select([mySocket], [], [], timeLeft)
         howLongInSelect = (time.time() - startedSelect)
+        #TODO:  Don't return crap data, throw exception
         if not whatReady[0]: # Timeout
             return None, 0, 0, 0, 0
   
@@ -358,6 +367,7 @@ def _receive_one_ping(mySocket, socketID, timeout):
             return timeReceived, dataSize, iphSrcIP, icmpSeqNumber, iphTTL
   
         timeLeft = timeLeft - howLongInSelect
+        #TODO:  Don't return crap data, throw exception
         if timeLeft <= 0:
             return None, 0, 0, 0, 0
   
