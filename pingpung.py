@@ -5,7 +5,8 @@ import time
 from itertools import count
 
 class PingThread(QtCore.QThread):
-
+    """ The thread class
+    """
     def __init__(self, ip, pingCount, interval, tabID):
         self.ip = ip
         self.pingCount = pingCount
