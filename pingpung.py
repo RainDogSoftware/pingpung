@@ -7,10 +7,11 @@ from itertools import count
 
 class PingThread(QtCore.QThread):
 
-    def __init__(self, ip, pingCount, interval, tabID):
+    def __init__(self, ip, pingCount, interval, packet_size, tabID):
         self.ip = ip
         self.pingCount = pingCount
         self.interval = interval
+        self.packet_size = packet_size
         self.tabID = tabID
         super(PingThread, self).__init__()
         
@@ -19,7 +20,7 @@ class PingThread(QtCore.QThread):
         while (count < self.pingCount) or (self.pingCount == 0):
             count += 1
             try:
-                self.result = pping.ping(self.ip, 1000, count, 55)
+                self.result = pping.ping(self.ip, 1000, count, self.packet_size)
             except pping.SocketError:
                 self.emit(QtCore.SIGNAL('error'), "Socket error.  Verify that program is running as root/admin.")
                 break
@@ -38,7 +39,7 @@ class PingPungGui(QtGui.QWidget):
         tabObject = self.tabObjects[result["tabID"]]
         if result["Success"]:
             tabObject.stats["Success Count"] += 1
-            output = "%s %i - %s - from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'], result['Message'], result['Responder'], result['Delay'])
+            output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'], result['Message'], result["PacketSize"], result['Responder'], result['Delay'])
         else:
             tabObject.stats["Fail Count"] += 1
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
@@ -107,17 +108,15 @@ class PingPungGui(QtGui.QWidget):
                                   
         def start_ping(*args):
             ip = tabObject.ipBox.text()
-            
-            
-
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
+            packet_size = int(tabObject.packet_size_box.text())
             self.tabWidget.setTabText(self.tabWidget.currentIndex(), ip)
             
             outputText = "Starting ping to %s. \n Interval: %i seconds \n Count: %i \n" % (ip, interval, pingCount)
             tabObject.outputBox.insertPlainText(outputText) 
         
-            tabObject.thread = PingThread(ip, pingCount, interval, tabID)
+            tabObject.thread = PingThread(ip, pingCount, interval, packet_size, tabID)
             self.connect_slots(tabObject.thread)
             
             tabObject.thread.start()
@@ -184,6 +183,12 @@ class PingPungGui(QtGui.QWidget):
         tabLayout.addWidget(tabObject.intervalLabel,2,3)
         tabObject.intervalBox = QtGui.QLineEdit("1")
         tabLayout.addWidget(tabObject.intervalBox, 3,3)
+        
+        # Packet Size
+        tabObject.packet_size_label = QtGui.QLabel("Packet Size (bytes)")
+        tabLayout.addWidget(tabObject.packet_size_label,2,4)
+        tabObject.packet_size_box = QtGui.QLineEdit("64")
+        tabLayout.addWidget(tabObject.packet_size_box, 3,4)
         
         # Start Button
         tabObject.startPingButton = QtGui.QPushButton('Start', self)

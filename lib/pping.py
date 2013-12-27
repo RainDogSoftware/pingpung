@@ -282,6 +282,7 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
     result["Responder"] = socket.inet_ntoa(struct.pack("!I", iphSrcIP))
     result["SeqNumber"] = icmpSeqNumber
     result["Delay"] = delay
+    result["PacketSize"] = numDataBytes
     result["Timestamp"] = str(datetime.datetime.now()).split('.')[0]
   
     return result
