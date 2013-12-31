@@ -111,7 +111,11 @@ class PingPungGui(QtGui.QWidget):
             pingCount = int(tabObject.pingCountBox.text())
             interval = int(tabObject.intervalBox.text())
             packet_size = int(tabObject.packet_size_box.text())
-            self.tabWidget.setTabText(self.tabWidget.currentIndex(), ip)
+            if len(tabObject.session_label_box.text()) >= 1:
+                label_text = " ".join([tabObject.session_label_box.text(),"-", ip])
+            else:
+                label_text = ip
+            self.tabWidget.setTabText(self.tabWidget.currentIndex(), label_text)
             
             outputText = "Starting ping to %s. \n Interval: %i seconds \n Count: %i \n" % (ip, interval, pingCount)
             tabObject.outputBox.insertPlainText(outputText) 
@@ -139,11 +143,12 @@ class PingPungGui(QtGui.QWidget):
             filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', file_types)
             try:
                 fname = open(filename, 'w')
+                fname.write(tabObject.summaryBox.toPlainText() + "\n\n")
                 fname.write(tabObject.outputBox.toPlainText())
                 fname.close() 
-                raise Exception
             except: #Yeah, I know, blanket exceptions are not a great idea.  This won't stay this way forever.  
                 self.show_error("Unable to save log file")
+                raise
             
         tabObject.stats = clear_stats()
         
@@ -172,23 +177,29 @@ class PingPungGui(QtGui.QWidget):
         tabObject.ipBox = QtGui.QLineEdit("8.8.8.8")
         tabLayout.addWidget(tabObject.ipBox,3,1)
         
+        # Session Label Box
+        tabObject.session_label = QtGui.QLabel("Session Label (Optional)")
+        tabLayout.addWidget(tabObject.session_label,2,2)
+        tabObject.session_label_box = QtGui.QLineEdit("")
+        tabLayout.addWidget(tabObject.session_label_box,3,2)
+        
         # Ping count box
         tabObject.pingCountLabel = QtGui.QLabel("Count (0=infinite)")
-        tabLayout.addWidget(tabObject.pingCountLabel,2,2)
+        tabLayout.addWidget(tabObject.pingCountLabel,2,3)
         tabObject.pingCountBox = QtGui.QLineEdit("0")
-        tabLayout.addWidget(tabObject.pingCountBox,3,2)
+        tabLayout.addWidget(tabObject.pingCountBox,3,3)
         
         # Interval Box
         tabObject.intervalLabel = QtGui.QLabel("Interval (seconds)")
-        tabLayout.addWidget(tabObject.intervalLabel,2,3)
+        tabLayout.addWidget(tabObject.intervalLabel,2,4)
         tabObject.intervalBox = QtGui.QLineEdit("1")
-        tabLayout.addWidget(tabObject.intervalBox, 3,3)
+        tabLayout.addWidget(tabObject.intervalBox, 3,4)
         
         # Packet Size
         tabObject.packet_size_label = QtGui.QLabel("Packet Size (bytes)")
-        tabLayout.addWidget(tabObject.packet_size_label,2,4)
+        tabLayout.addWidget(tabObject.packet_size_label,2,5)
         tabObject.packet_size_box = QtGui.QLineEdit("64")
-        tabLayout.addWidget(tabObject.packet_size_box, 3,4)
+        tabLayout.addWidget(tabObject.packet_size_box, 3,5)
         
         # Start Button
         tabObject.startPingButton = QtGui.QPushButton('Start', self)
@@ -203,13 +214,13 @@ class PingPungGui(QtGui.QWidget):
         
         # Output Box
         tabObject.outputBox = QtGui.QPlainTextEdit()
-        tabObject.outputBox.insertPlainText("Enter an IP address above and click Start. \n")
+        #tabObject.outputBox.insertPlainText()
         tabObject.outputBox.setReadOnly(True)
         tabLayout.addWidget(tabObject.outputBox,4,1,16,10)
         
         # Summary Box
         tabObject.summaryBox = QtGui.QPlainTextEdit()
-        tabLayout.addWidget(tabObject.summaryBox,4,11,15,8)
+        tabLayout.addWidget(tabObject.summaryBox,4,11,15,2)
         
         # Clear Log button
         tabObject.clearLogButton = QtGui.QPushButton('Clear Log', self)
