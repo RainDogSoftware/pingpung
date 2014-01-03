@@ -33,7 +33,7 @@ class PingThread(QtCore.QThread):
                 time.sleep(self.interval)
                 
 
-class PingPungGui(QtGui.QWidget):
+class PingPungGui(QtGui.QMainWindow):
     
     def show_result(self, result):
         tabObject = self.tabObjects[result["tabID"]]
@@ -83,10 +83,23 @@ class PingPungGui(QtGui.QWidget):
         self.setWindowTitle('PingPung')
         self.setWindowIcon(QtGui.QIcon('web.png'))
         
+        exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)        
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(QtGui.qApp.quit)
+
+        self.statusBar()
+
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(exitAction)      
+        
+        
         self.init_tabs()
-        mainLayout = QtGui.QGridLayout()
-        mainLayout.addWidget(self.tabWidget)
-        self.setLayout(mainLayout)
+        #mainLayout = QtGui.QGridLayout()
+        #mainLayout.addWidget(self.tabWidget)
+        #self.main_widget = QtGui.QWidget
+        self.setCentralWidget(self.tabWidget)
     
         self.show()    
         #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Second Tab")
