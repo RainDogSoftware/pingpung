@@ -210,25 +210,25 @@ def checksum(source_string):
     packed), but this works.
     Network data is big-endian, hosts are typically little-endian
     """
-    countTo = (int(len(source_string)/2))*2
+    count_to = (int(len(source_string)/2))*2
     _sum = 0
     count = 0
 
-    while count < countTo:
+    while count < count_to:
         if sys.byteorder == "little":
-            loByte = source_string[count]
-            hiByte = source_string[count + 1]
+            lo_byte = source_string[count]
+            hi_byte = source_string[count + 1]
         else:
-            loByte = source_string[count + 1]
-            hiByte = source_string[count]
-        _sum += hiByte * 256 + loByte
+            lo_byte = source_string[count + 1]
+            hi_byte = source_string[count]
+        _sum += hi_byte * 256 + lo_byte
         count += 2
   
     # Handle last byte if applicable (odd-number of bytes)
     # Endianness should be irrelevant in this case
-    if countTo < len(source_string): # Check for odd length
-        loByte = source_string[len(source_string)-1]
-        _sum += loByte
+    if count_to < len(source_string): # Check for odd length
+        lo_byte = source_string[len(source_string)-1]
+        _sum += lo_byte
   
     _sum &= 0xffffffff # Truncate _sum to 32 bits (a variance from ping.c, which
                       # uses signed ints, but overflow is unlikely in ping)
@@ -241,7 +241,7 @@ def checksum(source_string):
     return answer
   
 #=============================================================================#
-def ping(destIP, timeout, mySeqNumber, numDataBytes):
+def ping(dest_ip, timeout, seq_number, num_data_bytes):
     """
     Core pypinglib function.  
     """
@@ -249,7 +249,7 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
     delay = None
   
     try: # One could use UDP here, but it's obscure
-        mySocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
+        this_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
     except socket.error:
         raise SocketError
   
@@ -257,20 +257,20 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
     # Each ping gets a socket ID number from a 1-65535 cycling iterator.  
     # Theoretically, this means that it can support over 65000 simultaneous pings
     # without worrying about a socket ID clash
-    socketID = next(id_gen)
+    socket_id = next(id_gen)
   
     try:
-        sentTime = _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes)
+        sent_time = _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes)
     except AddressError:
         raise
 
-    recvTime, dataSize, iphSrcIP, icmpSeqNumber, iphTTL = _receive_one_ping(mySocket, socketID, timeout)
+    recv_time, data_size, iph_src_ip, icmp_seq_number, iph_ttl = _receive_one_ping(this_socket, socket_id, timeout)
   
-    mySocket.close()
+    this_socket.close()
     
     result = {}
-    if recvTime:
-        delay = (recvTime-sentTime)*1000     
+    if recv_time:
+        delay = (recv_time-sent_time)*1000
         
         result["Success"] = True
         result["Message"] = "Success"
@@ -279,96 +279,97 @@ def ping(destIP, timeout, mySeqNumber, numDataBytes):
         result["Success"] = False
         result["Message"] = "Request Timed Out"
         
-    result["Responder"] = socket.inet_ntoa(struct.pack("!I", iphSrcIP))
-    result["SeqNumber"] = icmpSeqNumber
+    result["Responder"] = socket.inet_ntoa(struct.pack("!I", iph_src_ip))
+    result["SeqNumber"] = icmp_seq_number
     result["Delay"] = delay
+    result["PacketSize"] = num_data_bytes
     result["Timestamp"] = str(datetime.datetime.now()).split('.')[0]
   
     return result
   
 #=============================================================================#
-def _send_one_ping(mySocket, destIP, socketID, mySeqNumber, numDataBytes):
+def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     """
     Send one ping to the given >destIP<.
     """
     try:
-        destIP  =  socket.gethostbyname(destIP)
+        dest_ip  =  socket.gethostbyname(dest_ip)
     except socket.error:
         raise AddressError
   
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
-    myChecksum = 0
+    packet_checksum = 0
   
     # Make a dummy heder with a 0 checksum.
     header = struct.pack(
-        "!BBHHH", ICMP_ECHO, 0, myChecksum, socketID, mySeqNumber
+        "!BBHHH", ICMP_ECHO, 0, packet_checksum, socket_id, seq_number
     )
   
-    padBytes = []
-    startVal = 0x42
-    for i in range(startVal, startVal + numDataBytes):
-        padBytes += [(i & 0xff)]  # Keep chars in the 0-255 range
-    data = bytes(padBytes)
+    pad_bytes = []
+    start_value = 0x42
+    for i in range(start_value, start_value + num_data_bytes):
+        pad_bytes += [(i & 0xff)]  # Keep chars in the 0-255 range
+    data = bytes(pad_bytes)
   
     # Calculate the checksum on the data and the dummy header.
-    myChecksum = checksum(header + data) # Checksum is in network order
+    packet_checksum = checksum(header + data) # Checksum is in network order
   
     # Now that we have the right checksum, we put that in. It's just easier
     # to make up a new header than to stuff it into the dummy.
     header = struct.pack(
-        "!BBHHH", ICMP_ECHO, 0, myChecksum, socketID, mySeqNumber
+        "!BBHHH", ICMP_ECHO, 0, packet_checksum, socket_id, seq_number
     )
   
     packet = header + data
   
-    sendTime = time.time()
+    send_time = time.time()
   
     try:
-        mySocket.sendto(packet, (destIP, 1)) # Port number is irrelevant for ICMP
+        this_socket.sendto(packet, (dest_ip, 1)) # Port number is irrelevant for ICMP
     except socket.error as e:
         raise SocketError 
   
-    return sendTime
+    return send_time
   
 #=============================================================================#
-def _receive_one_ping(mySocket, socketID, timeout):
+def _receive_one_ping(this_socket, socket_id, timeout):
     """
     Receive the ping from the socket. Timeout = in ms
     """
-    timeLeft = timeout/1000
+    time_left = timeout/1000
   
     while True: # Loop while waiting for packet or timeout
-        startedSelect = time.time()
-        whatReady = select.select([mySocket], [], [], timeLeft)
-        howLongInSelect = (time.time() - startedSelect)
+        started_select = time.time()
+        what_ready = select.select([this_socket], [], [], time_left)
+        how_long_in_select = (time.time() - started_select)
         #TODO:  Don't return crap data, throw exception
-        if not whatReady[0]: # Timeout
+        if not what_ready[0]: # Timeout
             return None, 0, 0, 0, 0
   
-        timeReceived = time.time()
+        time_received = time.time()
   
-        recPacket, addr = mySocket.recvfrom(ICMP_MAX_RECV)
+        rec_packet, addr = this_socket.recvfrom(ICMP_MAX_RECV)
   
-        ipHeader = recPacket[:20]
-        iphVersion, iphTypeOfSvc, iphLength, \
-        iphID, iphFlags, iphTTL, iphProtocol, \
-        iphChecksum, iphSrcIP, iphDestIP = struct.unpack(
-            "!BBHHHBBHII", ipHeader
+        ip_header = rec_packet[:20]
+        iph_version, iph_type_of_svc, iph_length, \
+        iph_id, iph_flags, iph_ttl, iph_protocol, \
+        iph_checksum, iph_src_ip, iph_dest_ip = struct.unpack(
+            "!BBHHHBBHII", ip_header
         )
   
-        icmpHeader = recPacket[20:28]
-        icmpType, icmpCode, icmpChecksum, \
-        icmpPacketID, icmpSeqNumber = struct.unpack(
-            "!BBHHH", icmpHeader
+        icmp_header = rec_packet[20:28]
+        icmp_type, icmp_code, icmp_checksum, \
+        icmp_packet_id, icmp_seq_number = struct.unpack(
+            "!BBHHH", icmp_header
         )
   
-        if icmpPacketID == socketID: # Our packet
-            dataSize = len(recPacket) - 28
-            return timeReceived, dataSize, iphSrcIP, icmpSeqNumber, iphTTL
+        if icmp_packet_id == socket_id: # Our packet
+            data_size = len(rec_packet) - 28
+            return time_received, data_size, iph_src_ip, icmp_seq_number, iph_ttl
   
-        timeLeft = timeLeft - howLongInSelect
+        time_left = time_left - how_long_in_select
         #TODO:  Don't return crap data, throw exception
-        if timeLeft <= 0:
+        if time_left <= 0:
             return None, 0, 0, 0, 0
   
 
