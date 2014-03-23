@@ -18,6 +18,9 @@ class PingThread(QtCore.QThread):
         count = 0
         while (count < self.ping_count) or (self.ping_count == 0):
             count += 1
+
+            if count > 65535:
+                count = 0
             try:
                 self.result = pping.ping(self.ip, 1000, count, self.packet_size)
             except pping.SocketError:
@@ -119,7 +122,7 @@ class PingPungGui(QtGui.QMainWindow):
                     "Fail Count":0}
                                   
         def start_ping(*args):
-            ip = tab_object.ip_box.text()
+            ip = tab_object.ip_box.text().strip()
             ping_count = int(tab_object.ping_count_box.text())
             interval = int(tab_object.interval_box.text())
             packet_size = int(tab_object.packet_size_box.text())
@@ -186,7 +189,8 @@ class PingPungGui(QtGui.QMainWindow):
         # Ip address box
         tab_object.ip_label = QtGui.QLabel("Remote IP Address")
         tab_layout.addWidget(tab_object.ip_label,2,1)
-        tab_object.ip_box = QtGui.QLineEdit("8.8.8.8")
+        tab_object.ip_box = QtGui.QLineEdit("127.0.0.1")
+        tab_object.ip_box.returnPressed.connect(start_ping)
         tab_layout.addWidget(tab_object.ip_box,3,1)
         
         # Session Label Box
