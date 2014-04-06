@@ -1,8 +1,11 @@
 import sys
-from PyQt4 import QtGui, QtCore
-from lib import pping
 import time
 from itertools import count
+
+from PyQt4 import QtGui, QtCore
+
+from lib import pping
+
 
 class PingThread(QtCore.QThread):
 
@@ -18,7 +21,7 @@ class PingThread(QtCore.QThread):
         count = 0
         while (count < self.ping_count) or (self.ping_count == 0):
             count += 1
-
+            # Cannot accept sequence number > 65535.  This resets seq number but does not affect stats totals
             if count > 65535:
                 count = 0
             try:
@@ -36,7 +39,13 @@ class PingThread(QtCore.QThread):
                 
 
 class PingPungGui(QtGui.QMainWindow):
-    
+
+    def __init__(self):
+        super(PingPungGui, self).__init__()
+        self.counter_iter = count()
+        self.tab_objects = {}
+        self.init_ui()
+
     def show_result(self, result):
         tab_object = self.tab_objects[result["tabID"]]
         if result["Success"]:
@@ -60,20 +69,21 @@ class PingPungGui(QtGui.QMainWindow):
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-    
-    def __init__(self):
-        super(PingPungGui, self).__init__()
-        self.counter_iter = count()
-        self.tab_objects = {}
-        self.init_ui()
         
     def init_tabs(self):
         # returns layout containing tab bar
         self.tab_widget = QtGui.QTabWidget()
+
+
+        plus_button = QtGui.QPushButton("+", self)
+        plus_button.clicked.connect(self.new_tab)
+        self.tab_widget.setCornerWidget(plus_button)
+
         self.new_tab("Initial Tab")
         
-    def new_tab(self, *args, name = "New Tab"):
-        index = self.tab_widget.addTab(self.populate_tab(QtGui.QWidget()), name)
+    def new_tab(self, somebool, name="New Tab"):
+        this_tab = self.populate_tab(QtGui.QWidget())
+        index = self.tab_widget.addTab(this_tab, name)
         self.tab_widget.setCurrentIndex(index)
         
     def remove_tab(self, tab_id):
@@ -139,6 +149,7 @@ class PingPungGui(QtGui.QMainWindow):
             self.connect_slots(tab_object.thread)
             
             tab_object.thread.start()
+            #TODO: Do this with signals instead of function calls, make it a single toggle, errors should toggle off
             tab_object.start_ping_button.setEnabled(False)
             tab_object.stop_ping_button.setEnabled(True)
 
