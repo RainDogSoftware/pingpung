@@ -3,7 +3,6 @@ import time
 from itertools import count
 
 from PyQt4 import QtGui, QtCore
-
 from lib import pping
 
 
