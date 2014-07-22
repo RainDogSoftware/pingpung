@@ -3,7 +3,7 @@ import time
 from itertools import count
 
 from PyQt4 import QtGui, QtCore
-from lib import pping
+from lib import pping, audio
 
 
 class PingThread(QtCore.QThread):
@@ -47,10 +47,13 @@ class PingPungGui(QtGui.QMainWindow):
 
     def show_result(self, result):
         tab_object = self.tab_objects[result["tabID"]]
+
         if result["Success"]:
+            audio.play("pingpung/data/woohoo.wav")
             tab_object.stats["Success Count"] += 1
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'], result['Message'], result["PacketSize"], result['Responder'], result['Delay'])
         else:
+            audio.play("pingpung/data/doh.wav")
             tab_object.stats["Fail Count"] += 1
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
                 
