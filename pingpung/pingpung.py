@@ -249,7 +249,7 @@ class PingPungGui(QtGui.QMainWindow):
         
         # Summary Box
         tab_object.summary_box = QtGui.QPlainTextEdit()
-        tab_layout.addWidget(tab_object.summary_box,4,11,15,2)
+        tab_layout.addWidget(tab_object.summary_box,4,11,11,2)
         
         # Clear Log button
         tab_object.clear_log_button = QtGui.QPushButton('Clear Log', self)
@@ -260,7 +260,24 @@ class PingPungGui(QtGui.QMainWindow):
         tab_object.save_log_button = QtGui.QPushButton('Save Log', self)
         tab_object.save_log_button.clicked.connect(save_log)
         tab_layout.addWidget(tab_object.save_log_button,19,12)
-        
+
+        # Audio options
+        tab_object.audio_option_box = QtGui.QGroupBox("Audio Options")
+        checkBox = QtGui.QCheckBox("Enable audio alerts")
+        radio1 = QtGui.QRadioButton("Alert on Success")
+        radio2 = QtGui.QRadioButton("Alert on Failure")
+        radio1.setChecked(True)
+        checkBox.setChecked(True)
+
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(checkBox)
+        vbox.addWidget(radio1)
+        vbox.addWidget(radio2)
+
+        vbox.addStretch(1)
+        tab_object.audio_option_box.setLayout(vbox)
+        tab_layout.addWidget(tab_object.audio_option_box, 15,11,4,2)
+
         tab_object.setLayout(tab_layout)
         
         return tab_object
