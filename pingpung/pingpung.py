@@ -276,7 +276,7 @@ class PingPungGui(QtGui.QMainWindow):
         tab_object.alert_success_button = QtGui.QRadioButton("Alert on Success")
         tab_object.alert_failure_button = QtGui.QRadioButton("Alert on Failure")
         tab_object.alert_success_button.setChecked(True)
-        tab_object.audio_checkBox.setChecked(True)
+        tab_object.audio_checkBox.setChecked(False)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(tab_object.audio_checkBox)
