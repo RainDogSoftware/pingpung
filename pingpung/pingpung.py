@@ -49,11 +49,15 @@ class PingPungGui(QtGui.QMainWindow):
         tab_object = self.tab_objects[result["tabID"]]
 
         if result["Success"]:
-            audio.play("pingpung/data/woohoo.wav")
+            if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_success_button.isChecked():
+                audio.play("pingpung/data/woohoo.wav")
+
             tab_object.stats["Success Count"] += 1
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'], result['Message'], result["PacketSize"], result['Responder'], result['Delay'])
         else:
-            audio.play("pingpung/data/doh.wav")
+            if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_failure_button.isChecked():
+                audio.play("pingpung/data/doh.wav")
+
             tab_object.stats["Fail Count"] += 1
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
                 
@@ -100,6 +104,7 @@ class PingPungGui(QtGui.QMainWindow):
         exit_action = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
         exit_action.setShortcut('Ctrl+Q')
         exit_action.setStatusTip('Exit application')
+
         exit_action.triggered.connect(QtGui.qApp.quit)
 
         self.statusBar()
@@ -263,16 +268,16 @@ class PingPungGui(QtGui.QMainWindow):
 
         # Audio options
         tab_object.audio_option_box = QtGui.QGroupBox("Audio Options")
-        checkBox = QtGui.QCheckBox("Enable audio alerts")
-        radio1 = QtGui.QRadioButton("Alert on Success")
-        radio2 = QtGui.QRadioButton("Alert on Failure")
-        radio1.setChecked(True)
-        checkBox.setChecked(True)
+        tab_object.audio_checkBox = QtGui.QCheckBox("Enable audio alerts")
+        tab_object.alert_success_button = QtGui.QRadioButton("Alert on Success")
+        tab_object.alert_failure_button = QtGui.QRadioButton("Alert on Failure")
+        tab_object.alert_success_button.setChecked(True)
+        tab_object.audio_checkBox.setChecked(True)
 
         vbox = QtGui.QVBoxLayout()
-        vbox.addWidget(checkBox)
-        vbox.addWidget(radio1)
-        vbox.addWidget(radio2)
+        vbox.addWidget(tab_object.audio_checkBox)
+        vbox.addWidget(tab_object.alert_success_button)
+        vbox.addWidget(tab_object.alert_failure_button)
 
         vbox.addStretch(1)
         tab_object.audio_option_box.setLayout(vbox)

@@ -2,15 +2,7 @@ import winsound
 import sys
 import threading
 
-if sys.platform == "win32":
-    # On Windows, the best timer is time.clock()
-    play_func = winsound.PlaySound
-else:
-    # On most other platforms the best timer is time.time()
-    play_func = None
-
 def play(wav_file):
-
     sound_thread = SoundThread(wav_file)
     sound_thread.start()
 
@@ -20,5 +12,9 @@ class SoundThread(threading.Thread):
         self.wav_file = wav_file
     def run(self):
         print("starting sound")
-        play_func(self.wav_file, winsound.SND_FILENAME)
+        if sys.platform == "win32":
+            winsound.PlaySound(self.wav_file, winsound.SND_FILENAME)
+        else:
+            # TODO:  Add non-win audio support
+            print("Audio not yet available on this platform")
 
