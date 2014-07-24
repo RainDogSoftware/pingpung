@@ -215,24 +215,28 @@ class PingPungGui(QtGui.QMainWindow):
         tab_object.session_label = QtGui.QLabel("Session Label (Optional)")
         tab_layout.addWidget(tab_object.session_label,2,2)
         tab_object.session_label_box = QtGui.QLineEdit("")
+        tab_object.session_label_box.returnPressed.connect(start_ping)
         tab_layout.addWidget(tab_object.session_label_box,3,2)
         
         # Ping count box
         tab_object.ping_count_label = QtGui.QLabel("Count (0=infinite)")
         tab_layout.addWidget(tab_object.ping_count_label,2,3)
         tab_object.ping_count_box = QtGui.QLineEdit("0")
+        tab_object.ping_count_box.returnPressed.connect(start_ping)
         tab_layout.addWidget(tab_object.ping_count_box,3,3)
         
         # Interval Box
         tab_object.interval_label = QtGui.QLabel("Interval (seconds)")
         tab_layout.addWidget(tab_object.interval_label,2,4)
         tab_object.interval_box = QtGui.QLineEdit("1")
+        tab_object.interval_box.returnPressed.connect(start_ping)
         tab_layout.addWidget(tab_object.interval_box, 3,4)
         
         # Packet Size
         tab_object.packet_size_label = QtGui.QLabel("Packet Size (bytes)")
         tab_layout.addWidget(tab_object.packet_size_label,2,5)
         tab_object.packet_size_box = QtGui.QLineEdit("64")
+        tab_object.packet_size_box.returnPressed.connect(start_ping)
         tab_layout.addWidget(tab_object.packet_size_box, 3,5)
         
         # Start Button
