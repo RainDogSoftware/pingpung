@@ -1,5 +1,6 @@
 import sys
 import time
+import os.path
 from itertools import count
 
 from PyQt4 import QtGui, QtCore
@@ -104,7 +105,13 @@ class PingPungGui(QtGui.QMainWindow):
     def init_ui(self):
         self.setGeometry(100, 100, 800, 600)
         self.setWindowTitle('PingPung')
-        self.setWindowIcon(QtGui.QIcon('web.png'))
+
+        # The path changes once app has been packaged for windows, doing a quick file exists check
+        if os.path.isfile('pingpung/data/icon.ico'):
+            icon_loc = "pingpung/data/icon.ico"
+        else:
+            icon_loc = "icon.ico"
+        self.setWindowIcon(QtGui.QIcon(icon_loc))
 
         exit_action = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
         exit_action.setShortcut('Ctrl+Q')
