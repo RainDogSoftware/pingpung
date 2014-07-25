@@ -45,9 +45,10 @@ class PingPungGui(QtGui.QMainWindow):
 
     def show_result(self, result):
         tab_object = self.tab_objects[result["tabID"]]
+        tab_index = self.tab_widget.indexOf(tab_object)
 
         if result["Success"]:
-            self.tab_widget.tabBar().setTabTextColor(self.tab_widget.currentIndex(), QtGui.QColor(0, 128, 0))
+            self.tab_widget.tabBar().setTabTextColor(tab_index, QtGui.QColor(0, 128, 0))
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_success_button.isChecked():
                 audio.play("pingpung/data/woohoo.wav")
 
@@ -56,7 +57,7 @@ class PingPungGui(QtGui.QMainWindow):
                                                                        result['Message'], result["PacketSize"],
                                                                        result['Responder'], result['Delay'])
         else:
-            self.tab_widget.tabBar().setTabTextColor(self.tab_widget.currentIndex(), QtGui.QColor(128, 0, 0))
+            self.tab_widget.tabBar().setTabTextColor(tab_index, QtGui.QColor(128, 0, 0))
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_failure_button.isChecked():
                 audio.play("pingpung/data/doh.wav")
 
