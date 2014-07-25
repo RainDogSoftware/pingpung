@@ -47,6 +47,7 @@ class PingPungGui(QtGui.QMainWindow):
         tab_object = self.tab_objects[result["tabID"]]
 
         if result["Success"]:
+            self.tab_widget.tabBar().setTabTextColor(self.tab_widget.currentIndex(), QtGui.QColor(0, 128, 0))
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_success_button.isChecked():
                 audio.play("pingpung/data/woohoo.wav")
 
@@ -55,6 +56,7 @@ class PingPungGui(QtGui.QMainWindow):
                                                                        result['Message'], result["PacketSize"],
                                                                        result['Responder'], result['Delay'])
         else:
+            self.tab_widget.tabBar().setTabTextColor(self.tab_widget.currentIndex(), QtGui.QColor(128, 0, 0))
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_failure_button.isChecked():
                 audio.play("pingpung/data/doh.wav")
 
@@ -142,6 +144,7 @@ class PingPungGui(QtGui.QMainWindow):
             ping_count = int(tab_object.ping_count_box.text())
             interval = int(tab_object.interval_box.text())
             packet_size = int(tab_object.packet_size_box.text())
+            self.tab_widget.tabBar().setTabTextColor(self.tab_widget.currentIndex(), QtGui.QColor(0, 0, 0))
             if len(tab_object.session_label_box.text()) >= 1:
                 label_text = " ".join([tab_object.session_label_box.text(), "-", ip])
             else:
