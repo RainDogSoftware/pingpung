@@ -5,7 +5,6 @@ import sys
 # fine tuning.
 
 sys.path.append("pingpung")
-#sys.path.append("pingpung/data")
 buildOptions = dict(path=sys.path,
                     include_files=["pingpung/data"],
                     icon='pingpung/data/icon.ico',
