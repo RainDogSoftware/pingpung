@@ -14,7 +14,6 @@ class SoundThread(threading.Thread):
         self.wav_file = wav_file
 
     def run(self):
-        print("starting sound")
         if sys.platform == "win32":
             winsound.PlaySound(self.wav_file, winsound.SND_FILENAME)
         else:
