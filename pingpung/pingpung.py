@@ -51,7 +51,7 @@ class PingPungGui(QtGui.QMainWindow):
         if result["Success"]:
             self.tab_widget.tabBar().setTabTextColor(tab_index, QtGui.QColor(0, 128, 0))
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_success_button.isChecked():
-                audio.play("pingpung/data/woohoo.wav")
+                audio.play("data/woohoo.wav")
 
             tab_object.stats["Success Count"] += 1
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
@@ -60,7 +60,7 @@ class PingPungGui(QtGui.QMainWindow):
         else:
             self.tab_widget.tabBar().setTabTextColor(tab_index, QtGui.QColor(128, 0, 0))
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_failure_button.isChecked():
-                audio.play("pingpung/data/doh.wav")
+                audio.play("data/doh.wav")
 
             tab_object.stats["Fail Count"] += 1
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
@@ -106,12 +106,7 @@ class PingPungGui(QtGui.QMainWindow):
         self.setGeometry(100, 100, 800, 600)
         self.setWindowTitle('PingPung')
 
-        # The path changes once app has been packaged for windows, doing a quick file exists check
-        if os.path.isfile('pingpung/data/icon.ico'):
-            icon_loc = "pingpung/data/icon.ico"
-        else:
-            icon_loc = "icon.ico"
-        self.setWindowIcon(QtGui.QIcon(icon_loc))
+        self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
 
         exit_action = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
         exit_action.setShortcut('Ctrl+Q')
