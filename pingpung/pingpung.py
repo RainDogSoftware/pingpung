@@ -3,7 +3,7 @@ import time
 from itertools import count
 
 from PyQt4 import QtGui, QtCore
-from lib import pping, audio
+from pplib import pping, audio
 
 
 class PingThread(QtCore.QThread):
@@ -88,6 +88,7 @@ class PingPungGui(QtGui.QMainWindow):
         plus_button = QtGui.QPushButton("+", self)
         plus_button.clicked.connect(self.new_tab)
         self.tab_widget.setCornerWidget(plus_button)
+        self.tab_widget.setMovable(True)
 
         self.new_tab("Initial Tab")
 
@@ -118,14 +119,9 @@ class PingPungGui(QtGui.QMainWindow):
         file_menu.addAction(exit_action)
 
         self.init_tabs()
-        # mainLayout = QtGui.QGridLayout()
-        #mainLayout.addWidget(self.tabWidget)
-        #self.main_widget = QtGui.QWidget
         self.setCentralWidget(self.tab_widget)
 
         self.show()
-        #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Second Tab")
-        #self.tabWidget.addTab(self.populateTab(QtGui.QWidget()), "Third Tab")
 
     def show_error(self, message):
         QtGui.QMessageBox.about(self, "OH TEH NOES!", message)
