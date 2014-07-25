@@ -1,1 +1,1 @@
-.
+# PingPung - A Python3 and PyQT4 Multiplatform Desktop Ping Application.
