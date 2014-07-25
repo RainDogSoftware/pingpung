@@ -17,14 +17,14 @@ class PingThread(QtCore.QThread):
         super(PingThread, self).__init__()
         
     def run(self):
-        count = 0
-        while (count < self.ping_count) or (self.ping_count == 0):
-            count += 1
+        pcount = 0
+        while (pcount < self.ping_count) or (self.ping_count == 0):
+            pcount += 1
             # Cannot accept sequence number > 65535.  This resets seq number but does not affect stats totals
-            if count > 65535:
-                count = 0
+            if pcount > 65535:
+                pcount = 0
             try:
-                self.result = pping.ping(self.ip, 1000, count, self.packet_size)
+                self.result = pping.ping(self.ip, 1000, pcount, self.packet_size)
             except pping.SocketError:
                 self.emit(QtCore.SIGNAL('error'), "Socket error.  Verify that program is running as root/admin.")
                 break
@@ -53,7 +53,9 @@ class PingPungGui(QtGui.QMainWindow):
                 audio.play("pingpung/data/woohoo.wav")
 
             tab_object.stats["Success Count"] += 1
-            output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'], result['Message'], result["PacketSize"], result['Responder'], result['Delay'])
+            output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
+                                                                       result['Message'], result["PacketSize"],
+                                                                       result['Responder'], result['Delay'])
         else:
             if tab_object.audio_checkBox.checkState() == 2 and tab_object.alert_failure_button.isChecked():
                 audio.play("pingpung/data/doh.wav")
@@ -69,8 +71,10 @@ class PingPungGui(QtGui.QMainWindow):
         summary_box = tab_object.summary_box
         num_good = tab_object.stats["Success Count"]
         num_bad = tab_object.stats["Fail Count"]
-        percent = (num_good /(num_bad + num_good)) * 100
-        summary_box.setPlainText("Success Count:    %i \nFail Count:       %i \nPercent Success:  %i" % (num_good, num_bad,percent))
+        percent = (num_good / (num_bad + num_good)) * 100
+        summary_box.setPlainText("Success Count:    %i \nFail Count:       %i \nPercent Success:  %i" % (num_good,
+                                                                                                         num_bad,
+                                                                                                         percent))
     
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
@@ -79,7 +83,6 @@ class PingPungGui(QtGui.QMainWindow):
     def init_tabs(self):
         # returns layout containing tab bar
         self.tab_widget = QtGui.QTabWidget()
-
 
         plus_button = QtGui.QPushButton("+", self)
         plus_button.clicked.connect(self.new_tab)
@@ -112,8 +115,7 @@ class PingPungGui(QtGui.QMainWindow):
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(exit_action)
-        
-        
+
         self.init_tabs()
         #mainLayout = QtGui.QGridLayout()
         #mainLayout.addWidget(self.tabWidget)
@@ -127,7 +129,6 @@ class PingPungGui(QtGui.QMainWindow):
     def show_error(self, message):
             QtGui.QMessageBox.about(self, "OH TEH NOES!", message)
     
-        
     ############# Main GUI Building function ###################
     def populate_tab(self, tab_object):
         tab_id = next(self.counter_iter)
@@ -135,8 +136,8 @@ class PingPungGui(QtGui.QMainWindow):
         self.threads = []  
         
         def clear_stats():
-            return {"Success Count":0,
-                    "Fail Count":0}
+            return {"Success Count": 0,
+                    "Fail Count": 0}
                                   
         def start_ping(*args):
             ip = tab_object.ip_box.text().strip()
@@ -144,7 +145,7 @@ class PingPungGui(QtGui.QMainWindow):
             interval = int(tab_object.interval_box.text())
             packet_size = int(tab_object.packet_size_box.text())
             if len(tab_object.session_label_box.text()) >= 1:
-                label_text = " ".join([tab_object.session_label_box.text(),"-", ip])
+                label_text = " ".join([tab_object.session_label_box.text(), "-", ip])
             else:
                 label_text = ip
             self.tab_widget.setTabText(self.tab_widget.currentIndex(), label_text)
@@ -159,7 +160,6 @@ class PingPungGui(QtGui.QMainWindow):
             #TODO: Do this with signals instead of function calls, make it a single toggle, errors should toggle off
             tab_object.start_ping_button.setEnabled(False)
             tab_object.stop_ping_button.setEnabled(True)
-
 
         def stop_ping(*args):
             tab_object.output_box.insertPlainText("Stopping!\n")
@@ -179,7 +179,7 @@ class PingPungGui(QtGui.QMainWindow):
                 fname.write(tab_object.summary_box.toPlainText() + "\n\n")
                 fname.write(tab_object.output_box.toPlainText())
                 fname.close() 
-            except: #Yeah, I know, blanket exceptions are not a great idea.  This won't stay this way forever.  
+            except:  #Yeah, I know, blanket exceptions are not a great idea.  This won't stay this way forever.
                 self.show_error("Unable to save log file")
                 raise
             
@@ -190,85 +190,85 @@ class PingPungGui(QtGui.QMainWindow):
         # New Tab
         tab_object.new_tab_button = QtGui.QPushButton("New Tab", self)
         tab_object.new_tab_button.clicked.connect(self.new_tab)
-        tab_layout.addWidget(tab_object.new_tab_button,0,1)
+        tab_layout.addWidget(tab_object.new_tab_button, 0, 1)
         
         # Close tab
         tab_object.close_tab_button = QtGui.QPushButton("Close Tab", self)
         tab_object.close_tab_button.clicked.connect(lambda: self.remove_tab(self.tab_widget.currentIndex()))
-        tab_layout.addWidget(tab_object.close_tab_button,0,2)
+        tab_layout.addWidget(tab_object.close_tab_button, 0, 2)
         
         # Spacing hacks.  TODO:  learn better QT layout =P
         tab_object.spacer = QtGui.QLabel("")
-        tab_layout.addWidget(tab_object.spacer,1,1)
-        for i in range(4,11):
-          tab_object.spacer = QtGui.QLabel("              ")
-          tab_layout.addWidget(tab_object.spacer,0,i)
+        tab_layout.addWidget(tab_object.spacer, 1, 1)
+        for i in range(4, 11):
+            tab_object.spacer = QtGui.QLabel("              ")
+            tab_layout.addWidget(tab_object.spacer, 0, i)
         
         # Ip address box
         tab_object.ip_label = QtGui.QLabel("Remote IP Address")
-        tab_layout.addWidget(tab_object.ip_label,2,1)
+        tab_layout.addWidget(tab_object.ip_label, 2, 1)
         tab_object.ip_box = QtGui.QLineEdit("127.0.0.1")
         tab_object.ip_box.returnPressed.connect(start_ping)
-        tab_layout.addWidget(tab_object.ip_box,3,1)
+        tab_layout.addWidget(tab_object.ip_box, 3, 1)
         
         # Session Label Box
         tab_object.session_label = QtGui.QLabel("Session Label (Optional)")
-        tab_layout.addWidget(tab_object.session_label,2,2)
+        tab_layout.addWidget(tab_object.session_label, 2, 2)
         tab_object.session_label_box = QtGui.QLineEdit("")
         tab_object.session_label_box.returnPressed.connect(start_ping)
-        tab_layout.addWidget(tab_object.session_label_box,3,2)
+        tab_layout.addWidget(tab_object.session_label_box, 3, 2)
         
         # Ping count box
         tab_object.ping_count_label = QtGui.QLabel("Count (0=infinite)")
-        tab_layout.addWidget(tab_object.ping_count_label,2,3)
+        tab_layout.addWidget(tab_object.ping_count_label, 2, 3)
         tab_object.ping_count_box = QtGui.QLineEdit("0")
         tab_object.ping_count_box.returnPressed.connect(start_ping)
-        tab_layout.addWidget(tab_object.ping_count_box,3,3)
+        tab_layout.addWidget(tab_object.ping_count_box, 3, 3)
         
         # Interval Box
         tab_object.interval_label = QtGui.QLabel("Interval (seconds)")
-        tab_layout.addWidget(tab_object.interval_label,2,4)
+        tab_layout.addWidget(tab_object.interval_label, 2, 4)
         tab_object.interval_box = QtGui.QLineEdit("1")
         tab_object.interval_box.returnPressed.connect(start_ping)
-        tab_layout.addWidget(tab_object.interval_box, 3,4)
+        tab_layout.addWidget(tab_object.interval_box, 3, 4)
         
         # Packet Size
         tab_object.packet_size_label = QtGui.QLabel("Packet Size (bytes)")
-        tab_layout.addWidget(tab_object.packet_size_label,2,5)
+        tab_layout.addWidget(tab_object.packet_size_label, 2, 5)
         tab_object.packet_size_box = QtGui.QLineEdit("64")
         tab_object.packet_size_box.returnPressed.connect(start_ping)
-        tab_layout.addWidget(tab_object.packet_size_box, 3,5)
+        tab_layout.addWidget(tab_object.packet_size_box, 3, 5)
         
         # Start Button
         tab_object.start_ping_button = QtGui.QPushButton('Start', self)
         tab_object.start_ping_button.clicked.connect(start_ping)
-        tab_layout.addWidget(tab_object.start_ping_button,3,11)
+        tab_layout.addWidget(tab_object.start_ping_button, 3, 11)
         
         # Stop Button
         tab_object.stop_ping_button = QtGui.QPushButton('Stop', self)
         tab_object.stop_ping_button.clicked.connect(stop_ping)
         tab_object.stop_ping_button.setEnabled(False)
-        tab_layout.addWidget(tab_object.stop_ping_button,3,12)
+        tab_layout.addWidget(tab_object.stop_ping_button, 3, 12)
         
         # Output Box
         tab_object.output_box = QtGui.QPlainTextEdit()
         #tabObject.output_box.insertPlainText()
         tab_object.output_box.setReadOnly(True)
-        tab_layout.addWidget(tab_object.output_box,4,1,16,10)
+        tab_layout.addWidget(tab_object.output_box, 4, 1, 16, 10)
         
         # Summary Box
         tab_object.summary_box = QtGui.QPlainTextEdit()
-        tab_layout.addWidget(tab_object.summary_box,4,11,11,2)
+        tab_layout.addWidget(tab_object.summary_box, 4, 11, 11, 2)
         
         # Clear Log button
         tab_object.clear_log_button = QtGui.QPushButton('Clear Log', self)
         tab_object.clear_log_button.clicked.connect(clear_log)
-        tab_layout.addWidget(tab_object.clear_log_button,19,11)
+        tab_layout.addWidget(tab_object.clear_log_button, 19, 11)
         
         # Save Log button
         tab_object.save_log_button = QtGui.QPushButton('Save Log', self)
         tab_object.save_log_button.clicked.connect(save_log)
-        tab_layout.addWidget(tab_object.save_log_button,19,12)
+        tab_layout.addWidget(tab_object.save_log_button, 19, 12)
 
         # Audio options
         tab_object.audio_option_box = QtGui.QGroupBox("Audio Options")
@@ -285,12 +285,13 @@ class PingPungGui(QtGui.QMainWindow):
 
         vbox.addStretch(1)
         tab_object.audio_option_box.setLayout(vbox)
-        tab_layout.addWidget(tab_object.audio_option_box, 15,11,4,2)
+        tab_layout.addWidget(tab_object.audio_option_box, 15, 11, 4, 2)
 
         tab_object.setLayout(tab_layout)
         
         return tab_object
           
+
 def main():
     app = QtGui.QApplication(sys.argv)
     ex = PingPungGui()
