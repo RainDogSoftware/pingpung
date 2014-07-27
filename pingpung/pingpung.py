@@ -139,6 +139,7 @@ class PingPungGui(QtGui.QMainWindow):
                     "Fail Count": 0}
 
         def start_ping(*args):
+            stop_ping(silent=True)
             ip = tab_object.ip_box.text().strip()
             ping_count = int(tab_object.ping_count_box.text())
             interval = int(tab_object.interval_box.text())
@@ -161,9 +162,15 @@ class PingPungGui(QtGui.QMainWindow):
             tab_object.start_ping_button.setEnabled(False)
             tab_object.stop_ping_button.setEnabled(True)
 
-        def stop_ping(*args):
-            tab_object.output_box.insertPlainText("Stopping!\n")
-            tab_object.thread.terminate()
+        def stop_ping(*args, silent=False):
+            if silent == False:
+                tab_object.output_box.insertPlainText("Stopping!\n")
+            try:
+                tab_object.thread.terminate()
+            # We're calling stop every time a ping starts too, to ensure there's never two threads per tab
+            # so it's fine if there's no running thread when this is called
+            except AttributeError:
+                pass
             tab_object.stats = clear_stats()
             tab_object.start_ping_button.setEnabled(True)
             tab_object.stop_ping_button.setEnabled(False)

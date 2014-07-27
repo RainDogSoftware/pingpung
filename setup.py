@@ -1,17 +1,14 @@
 from cx_Freeze import setup, Executable
 import sys
-#from setuptools import find_packages
-# Dependencies are automatically detected, but it might need
-# fine tuning.
+
+base = 'Win32GUI' if sys.platform=='win32' else None
 
 sys.path.append("pingpung")
 buildOptions = dict(path=sys.path,
                     include_files=["pingpung/data"],
                     icon='pingpung/data/icon.ico',
-                    excludes = ["tkinter"], )
-
-
-base = 'Win32GUI' if sys.platform=='win32' else None
+                    excludes = ["tkinter"],
+                    base = base)
 
 executables = [
     Executable('pingpung/pingpung.py', base=base)
