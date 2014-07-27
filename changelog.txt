@@ -1,0 +1,11 @@
+---- 0.0.3
+
+created changelog
+added ability for more input fields to start ping when enter hit
+added call to stop_ping when start_ping was run
+added icon
+greatly improved windows packaging system
+added text coloration to indicate tab ping status
+removed herobrine
+expanded README
+
