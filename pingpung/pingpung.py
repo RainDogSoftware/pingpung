@@ -8,6 +8,21 @@ from pplib import pping, audio
 
 
 class PingThread(QtCore.QThread):
+    """ A QThread subclass for running the pings.
+
+    Args:
+        ip - the IP address or domain name of the target to ping
+        ping_count - how many times to run this ping before the thread terminates
+        interval - the time to sleep between pings
+        packet_size - number of bytes to send per ping
+        tab_id - the ID number of the tab which started the thread.
+            This is used to match ping response to the correct tab.
+
+    The results of a ping are sent via Qt Signals.  Errors are sent with a string describing the error, while the
+    complete ping signal (including timeouts and such) includes a dictionary with the detailed results, as provided by
+    the ping library in use.
+    """
+
     def __init__(self, ip, ping_count, interval, packet_size, tab_id):
         self.ip = ip
         self.ping_count = ping_count
@@ -130,8 +145,19 @@ class PingPungGui(QtGui.QMainWindow):
 
     # ############ Main GUI Building function ###################
     def populate_tab(self, tab_object):
+        """This method adds all the required GUI widgets to each tab and contains the start and stop methods that
+        launch and end a batch of pings.
+
+        This method is much much too long.
+        """
+
+        # Each tab gets an ID number as assigned by a generator.  This is NOT the same as the tab widget's index number,
+        # as that changes when tabs are moved/deleted.  This ID is constant throughout the runtime of app and is used
+        # to identify which tab sent (and should receive) data from a particular ping.
         tab_id = next(self.counter_iter)
+
         self.tab_objects[tab_id] = tab_object
+        # TODO: Delete this?  Seems to be unused.
         self.threads = []
 
         def clear_stats():
@@ -144,19 +170,22 @@ class PingPungGui(QtGui.QMainWindow):
             interval = int(tab_object.interval_box.text())
             packet_size = int(tab_object.packet_size_box.text())
             self.tab_widget.tabBar().setTabTextColor(self.tab_widget.currentIndex(), QtGui.QColor(0, 0, 0))
+
+            # If the Session Label box has something in it, include that in the tab's title bar.
             if len(tab_object.session_label_box.text()) >= 1:
                 label_text = " ".join([tab_object.session_label_box.text(), "-", ip])
-            else:
+            else: # Otherwise just show IP in tab title
                 label_text = ip
             self.tab_widget.setTabText(self.tab_widget.currentIndex(), label_text)
 
             output_text = "Starting ping to %s. \n Interval: %i seconds \n Count: %i \n" % (ip, interval, ping_count)
             tab_object.output_box.insertPlainText(output_text)
 
+            # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
             tab_object.thread = PingThread(ip, ping_count, interval, packet_size, tab_id)
             self.connect_slots(tab_object.thread)
-
             tab_object.thread.start()
+
             #TODO: Do this with signals instead of function calls, make it a single toggle, errors should toggle off
             tab_object.start_ping_button.setEnabled(False)
             tab_object.stop_ping_button.setEnabled(True)
@@ -172,6 +201,9 @@ class PingPungGui(QtGui.QMainWindow):
             tab_object.output_box.clear()
 
         def save_log(*args):
+            """
+            Dumps the contents of the output text box into a file as plain text
+            """
             file_types = "Plain Text (*.txt);;Plain Text (*.log)"
             filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', file_types)
             try:
@@ -184,7 +216,6 @@ class PingPungGui(QtGui.QMainWindow):
                 raise
 
         tab_object.stats = clear_stats()
-
         tab_layout = QtGui.QGridLayout()
 
         # New Tab
