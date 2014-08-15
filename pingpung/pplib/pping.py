@@ -174,11 +174,16 @@
 """
   
 #=============================================================================#
-import sys, socket, struct, select, time
+import sys
+import socket
+import struct
+import select
+import time
 import datetime
 import itertools
 
-id_gen = itertools.cycle(range(0,65535))
+
+id_gen = itertools.cycle(range(0, 65535))
 
 if sys.platform == "win32":
     # On Windows, the best timer is time.clock()
@@ -190,19 +195,24 @@ else:
 #=============================================================================#
 # ICMP parameters
   
-ICMP_ECHOREPLY  =    0 # Echo reply (per RFC792)
-ICMP_ECHO       =    8 # Echo request (per RFC792)
-ICMP_MAX_RECV   = 2048 # Max size of incoming buffer
+ICMP_ECHOREPLY = 0  # Echo reply (per RFC792)
+ICMP_ECHO = 8  # Echo request (per RFC792)
+ICMP_MAX_RECV = 2048  # Max size of incoming buffer
   
 MAX_SLEEP = 1000
 #=============================================================================#
 # Exceptions
+
+
 class SocketError(Exception):
     pass  
   
+
 class AddressError(Exception):
     pass
 #=============================================================================#
+
+
 def checksum(source_string):
     """
     A port of the functionality of in_cksum() from ping.c
@@ -226,11 +236,11 @@ def checksum(source_string):
   
     # Handle last byte if applicable (odd-number of bytes)
     # Endianness should be irrelevant in this case
-    if count_to < len(source_string): # Check for odd length
+    if count_to < len(source_string):  # Check for odd length
         lo_byte = source_string[len(source_string)-1]
         _sum += lo_byte
   
-    _sum &= 0xffffffff # Truncate _sum to 32 bits (a variance from ping.c, which
+    _sum &= 0xffffffff  # Truncate _sum to 32 bits (a variance from ping.c, which
                       # uses signed ints, but overflow is unlikely in ping)
   
     _sum = (_sum >> 16) + (_sum & 0xffff)    # Add high 16 bits to low 16 bits
@@ -240,6 +250,7 @@ def checksum(source_string):
   
     return answer
   
+
 #=============================================================================#
 def ping(dest_ip, timeout, seq_number, num_data_bytes):
     """
@@ -248,7 +259,7 @@ def ping(dest_ip, timeout, seq_number, num_data_bytes):
 
     delay = None
   
-    try: # One could use UDP here, but it's obscure
+    try:  # One could use UDP here, but it's obscure
         this_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
     except socket.error:
         raise SocketError
@@ -287,13 +298,14 @@ def ping(dest_ip, timeout, seq_number, num_data_bytes):
   
     return result
   
+
 #=============================================================================#
 def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     """
     Send one ping to the given >destIP<.
     """
     try:
-        dest_ip  =  socket.gethostbyname(dest_ip)
+        dest_ip = socket.gethostbyname(dest_ip)
     except socket.error:
         raise AddressError
   
@@ -312,7 +324,7 @@ def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     data = bytes(pad_bytes)
   
     # Calculate the checksum on the data and the dummy header.
-    packet_checksum = checksum(header + data) # Checksum is in network order
+    packet_checksum = checksum(header + data)  # Checksum is in network order
   
     # Now that we have the right checksum, we put that in. It's just easier
     # to make up a new header than to stuff it into the dummy.
@@ -325,12 +337,13 @@ def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     send_time = time.time()
   
     try:
-        this_socket.sendto(packet, (dest_ip, 1)) # Port number is irrelevant for ICMP
+        this_socket.sendto(packet, (dest_ip, 1))  # Port number is irrelevant for ICMP
     except socket.error as e:
         raise SocketError 
   
     return send_time
   
+
 #=============================================================================#
 def _receive_one_ping(this_socket, socket_id, timeout):
     """
@@ -338,12 +351,12 @@ def _receive_one_ping(this_socket, socket_id, timeout):
     """
     time_left = timeout/1000
   
-    while True: # Loop while waiting for packet or timeout
+    while True:  # Loop while waiting for packet or timeout
         started_select = time.time()
         what_ready = select.select([this_socket], [], [], time_left)
         how_long_in_select = (time.time() - started_select)
         #TODO:  Don't return crap data, throw exception
-        if not what_ready[0]: # Timeout
+        if not what_ready[0]:  # Timeout
             return None, 0, 0, 0, 0
   
         time_received = time.time()
@@ -363,7 +376,7 @@ def _receive_one_ping(this_socket, socket_id, timeout):
             "!BBHHH", icmp_header
         )
   
-        if icmp_packet_id == socket_id: # Our packet
+        if icmp_packet_id == socket_id:  # Our packet
             data_size = len(rec_packet) - 28
             return time_received, data_size, iph_src_ip, icmp_seq_number, iph_ttl
   
@@ -371,10 +384,3 @@ def _receive_one_ping(this_socket, socket_id, timeout):
         #TODO:  Don't return crap data, throw exception
         if time_left <= 0:
             return None, 0, 0, 0, 0
-  
-
-  
-
-  
-
- 
