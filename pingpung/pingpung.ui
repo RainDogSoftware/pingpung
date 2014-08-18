@@ -37,10 +37,14 @@
         <item row="0" column="0">
          <layout class="QGridLayout" name="gridLayout">
           <item row="1" column="3">
-           <widget class="QLineEdit" name="lineEdit_4"/>
+           <widget class="QLineEdit" name="count_box"/>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="ip_box"/>
+           <widget class="QLineEdit" name="ip_box">
+            <property name="toolTip">
+             <string>The target IP address or domain name</string>
+            </property>
+           </widget>
           </item>
           <item row="3" column="7">
            <widget class="QGroupBox" name="groupBox">
@@ -51,27 +55,27 @@
              </size>
             </property>
             <property name="title">
-             <string>GroupBox</string>
+             <string>Audio Alerts</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <item>
-              <widget class="QCheckBox" name="checkBox">
+              <widget class="QCheckBox" name="enable_audio_checkbox">
                <property name="text">
-                <string>CheckBox</string>
+                <string>Enable Audio</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QRadioButton" name="radioButton">
+              <widget class="QRadioButton" name="alert_on_success_button">
                <property name="text">
-                <string>RadioButton</string>
+                <string>Alert on Success</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QRadioButton" name="radioButton_2">
+              <widget class="QRadioButton" name="alert_on_failure_button">
                <property name="text">
-                <string>RadioButton</string>
+                <string>Alert on Failure</string>
                </property>
               </widget>
              </item>
@@ -79,27 +83,31 @@
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QLineEdit" name="lineEdit_2"/>
+           <widget class="QLineEdit" name="session_box">
+            <property name="toolTip">
+             <string>An optional label that will displayed as this tab's title</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="7">
-           <widget class="QCommandLinkButton" name="commandLinkButton">
+           <widget class="QCommandLinkButton" name="start_ping_button">
             <property name="text">
-             <string>CommandLinkButton</string>
+             <string>Start Ping</string>
             </property>
            </widget>
           </item>
           <item row="1" column="4">
-           <widget class="QLineEdit" name="lineEdit"/>
+           <widget class="QLineEdit" name="interval_box"/>
           </item>
           <item row="0" column="1">
            <widget class="QLabel" name="ip_label">
             <property name="text">
-             <string>TextLabel</string>
+             <string>IP Address</string>
             </property>
            </widget>
           </item>
           <item row="2" column="7">
-           <widget class="QTableWidget" name="tableWidget">
+           <widget class="QTableWidget" name="results_table">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -157,12 +165,42 @@
            </widget>
           </item>
           <item row="2" column="1" rowspan="2" colspan="5">
-           <widget class="QTextEdit" name="textEdit">
+           <widget class="QTextEdit" name="results_display">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>4</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="acceptDrops">
+             <bool>false</bool>
+            </property>
+            <property name="undoRedoEnabled">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="session_label">
+            <property name="text">
+             <string>Session Label</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="ping_count_label">
+            <property name="text">
+             <string>Ping Count</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="interval_label">
+            <property name="text">
+             <string>Interval</string>
             </property>
            </widget>
           </item>
@@ -188,7 +226,7 @@
      <x>0</x>
      <y>0</y>
      <width>876</width>
-     <height>19</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
