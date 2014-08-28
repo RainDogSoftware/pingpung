@@ -18,9 +18,9 @@ class PingThread(QtCore.QThread):
         tab_id - the ID number of the tab which started the thread.
             This is used to match ping response to the correct tab.
 
-    The results of a ping are sent via Qt Signals.  Errors are sent with a string describing the error, while the
-    complete ping signal (including timeouts and such) includes a dictionary with the detailed results, as provided by
-    the ping library in use.
+    The results of a ping are sent via Qt Signals.  Errors initializing the ping are sent with a string describing the
+    error, while the complete ping signal (including timeouts and such) includes a dictionary with the detailed results,
+    as provided by the ping library in use.
     """
 
     def __init__(self, ip, ping_count, interval, packet_size, tab_id):
@@ -60,6 +60,9 @@ class PingPungGui(QtGui.QMainWindow):
         self.init_ui()
 
     def show_result(self, result):
+        """
+        Reads the result dict as sent by signal handler and updates log as well as the summary stats.
+        """
         tab_object = self.tab_objects[result["tabID"]]
         tab_index = self.tab_widget.indexOf(tab_object)
 
