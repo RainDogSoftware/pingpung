@@ -1,8 +1,9 @@
-from cx_Freeze import setup, Executable
+try:
+    from cx_Freeze import setup, Executable
+except ImportError:
+    pass
+
 import sys
-#from setuptools import find_packages
-# Dependencies are automatically detected, but it might need
-# fine tuning.
 
 sys.path.append("pingpung")
 buildOptions = dict(path=sys.path,
@@ -21,4 +22,8 @@ setup(name='PingPung',
       version = '0.0.3',
       description = 'Python3/QT4 Multiplatform Ping Application',
       options = dict(build_exe = buildOptions),
-      executables = executables)
+      executables = executables,
+      install_requires=[
+          'cx_freeze',
+          'PyQt4']
+)

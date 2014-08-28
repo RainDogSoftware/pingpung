@@ -100,7 +100,6 @@ class PingPungGui(QtGui.QMainWindow):
     def init_tabs(self):
         # returns layout containing tab bar
         self.tab_widget = QtGui.QTabWidget()
-
         plus_button = QtGui.QPushButton("+", self)
         plus_button.clicked.connect(self.new_tab)
         self.tab_widget.setCornerWidget(plus_button)
