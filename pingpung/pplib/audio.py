@@ -1,4 +1,8 @@
-import winsound
+try:
+    import winsound
+except:
+    pass
+
 import sys
 import threading
 

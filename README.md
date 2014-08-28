@@ -7,4 +7,15 @@ library which creates its own socket.  **Because of this, it will require root p
 If you're uncomfortable with that, there are many other platform-specific graphical ping apps out there which do not 
 require root (because they're just wrappers around the OS's existing ping util).   
   
-  
+### A note about dependencies
+This application uses PyQt4 as the graphics library.  This package is not installable via PyPI and will need to be done
+separately.  On Debian/Ubuntu, for example, it's as simple as
+
+    sudo apt-get install python3-pyqt4
+
+If you intend to build for Windows, you'll also need to install cx_freeze by any method you choose, and build with
+    
+    python setup.py build_exe
+
+
+
