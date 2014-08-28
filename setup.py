@@ -23,7 +23,4 @@ setup(name='PingPung',
       description = 'Python3/QT4 Multiplatform Ping Application',
       options = dict(build_exe = buildOptions),
       executables = executables,
-      install_requires=[
-          'cx_freeze',
-          'PyQt4']
 )
