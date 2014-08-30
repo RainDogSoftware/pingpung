@@ -2,7 +2,7 @@ try:
     import winsound
 except ImportError:
     pass
-    
+
 import sys
 import threading
 
