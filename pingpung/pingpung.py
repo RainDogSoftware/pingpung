@@ -1,10 +1,10 @@
 import sys
 import time
 import os.path
-from itertools import count
+from PyQt4 import QtCore, QtGui
 
-from PyQt4 import QtGui, QtCore
-from pplib import pping, audio
+
+from pplib import pping, audio, gui
 
 
 class PingThread(QtCore.QThread):
@@ -52,12 +52,13 @@ class PingThread(QtCore.QThread):
                 time.sleep(self.interval)
 
 
-class PingPungGui(QtGui.QMainWindow):
+class PingPung():
     def __init__(self):
-        super(PingPungGui, self).__init__()
-        self.counter_iter = count()
-        self.tab_objects = {}
-        self.init_ui()
+        app = QtGui.QApplication(sys.argv)
+        ex = gui.MainWindow()
+        sys.exit(app.exec_())
+        #window = gui.MainWindow()
+
 
     def show_result(self, result):
         """
@@ -100,47 +101,18 @@ class PingPungGui(QtGui.QMainWindow):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
 
-    def init_tabs(self):
+    #def init_tabs(self):
         # returns layout containing tab bar
-        self.tab_widget = QtGui.QTabWidget()
-        plus_button = QtGui.QPushButton("+", self)
-        plus_button.clicked.connect(self.new_tab)
-        self.tab_widget.setCornerWidget(plus_button)
-        self.tab_widget.setMovable(True)
 
-        self.new_tab("Initial Tab")
 
-    def new_tab(self, somebool, name="New Tab"):
-        this_tab = self.populate_tab(QtGui.QWidget())
-        index = self.tab_widget.addTab(this_tab, name)
-        self.tab_widget.setCurrentIndex(index)
+     #   self.new_tab("Initial Tab")
+
+
 
     def remove_tab(self, tab_id):
         if tab_id != 0:
             self.tab_widget.removeTab(tab_id)
 
-    def init_ui(self):
-        self.setGeometry(100, 100, 800, 600)
-        self.setWindowTitle('PingPung')
-
-        self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
-
-        exit_action = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
-        exit_action.setShortcut('Ctrl+Q')
-        exit_action.setStatusTip('Exit application')
-
-        exit_action.triggered.connect(QtGui.qApp.quit)
-
-        self.statusBar()
-
-        menubar = self.menuBar()
-        file_menu = menubar.addMenu('&File')
-        file_menu.addAction(exit_action)
-
-        self.init_tabs()
-        self.setCentralWidget(self.tab_widget)
-
-        self.show()
 
     def show_error(self, message):
         QtGui.QMessageBox.about(self, "OH TEH NOES!", message)
@@ -160,7 +132,7 @@ class PingPungGui(QtGui.QMainWindow):
 
         self.tab_objects[tab_id] = tab_object
         # TODO: Delete this?  Seems to be unused.
-        self.threads = []
+        #self.threads = []
 
         def clear_stats():
             return {"Success Count": 0,
@@ -225,7 +197,7 @@ class PingPungGui(QtGui.QMainWindow):
                 raise
 
         tab_object.stats = clear_stats()
-        tab_layout = QtGui.QGridLayout()
+
 
         # New Tab
         tab_object.new_tab_button = QtGui.QPushButton("New Tab", self)
@@ -333,10 +305,8 @@ class PingPungGui(QtGui.QMainWindow):
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    ex = PingPungGui()
-    sys.exit(app.exec_())
+    PingPung()
 
 
 if __name__ == '__main__':
-    main() 
+    PingPung()
