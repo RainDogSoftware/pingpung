@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'pplib/tab.ui'
 #
-# Created: Mon Sep  1 13:38:32 2014
+# Created: Mon Sep  1 14:01:06 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -75,9 +75,9 @@ class Ui_tab_container(object):
         self.radioButton_2.setObjectName(_fromUtf8("radioButton_2"))
         self.verticalLayout.addWidget(self.radioButton_2)
         self.gridLayout.addWidget(self.groupBox, 3, 4, 1, 1)
-        self.textEdit = QtGui.QTextEdit(tab_container)
-        self.textEdit.setObjectName(_fromUtf8("textEdit"))
-        self.gridLayout.addWidget(self.textEdit, 2, 0, 2, 4)
+        self.output_textedit = QtGui.QTextEdit(tab_container)
+        self.output_textedit.setObjectName(_fromUtf8("output_textedit"))
+        self.gridLayout.addWidget(self.output_textedit, 2, 0, 2, 4)
         self.label = QtGui.QLabel(tab_container)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 1, 1, 1)
@@ -94,6 +94,9 @@ class Ui_tab_container(object):
 
     def retranslateUi(self, tab_container):
         tab_container.setWindowTitle(_translate("tab_container", "tab_container", None))
+        self.interval_line.setText(_translate("tab_container", "1", None))
+        self.ping_count_line.setText(_translate("tab_container", "5", None))
+        self.ip_line.setText(_translate("tab_container", "127.0.0.1", None))
         self.toggle_start.setText(_translate("tab_container", "Start", None))
         self.ip_line_label.setText(_translate("tab_container", "IP or Domain Name", None))
         self.groupBox.setTitle(_translate("tab_container", "GroupBox", None))

@@ -4,8 +4,8 @@ from itertools import count
 
 from PyQt4 import QtCore, QtGui
 
-from pplib import pping, audio, maingui, pptab
-
+from pplib import pping, audio
+from ppui import maingui, pptab
 
 class PingThread(QtCore.QThread):
     """ A QThread subclass for running the pings.
@@ -64,7 +64,14 @@ class PingPung(QtGui.QMainWindow):
         self.ui.tab_bar.removeTab(0)
         self.ui.tab_bar.removeTab(0)
 
+        # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
+        # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
+        # bar widget is not enough.  If a tab's index number changes while the ping thread is running, crazy
+        # things could happen
+        self.tabs = {}
         self.counter_iter = count()
+
+        # Always start with one tab
         self.new_tab()
         self.new_tab()
 
@@ -77,30 +84,43 @@ class PingPung(QtGui.QMainWindow):
         new_tab_object = QtGui.QWidget()
         tab_ui.setupUi(new_tab_object)
         tab_ui.tab_id = next(self.counter_iter)
+        # This is a dictionary of all tabs by ID number, so that they can be referenced later by number
+        self.tabs[tab_ui.tab_id] = tab_ui
         tab_ui.ip_line.returnPressed.connect(lambda: self.start_ping(tab_ui))
 
         self.ui.tab_bar.addTab(new_tab_object, "New Tab")
 
     def start_ping(self, tab_ui):
-
         ip = tab_ui.ip_line.text().strip()
         # TODO:  Try/catch with error gui
         ping_count = int(tab_ui.ping_count_line.text().strip())
         interval = int(tab_ui.interval_line.text().strip())
-        # ip, ping_count, interval, packet_size, tab_id
+
         # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
         tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
         self.connect_slots(tab_ui.thread)
         tab_ui.thread.start()
-        #ping_thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
-        print("Start signal Acquired!")
 
     def connect_slots(self, sender):
-        #self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
+        self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         #self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-        self.connect(sender, QtCore.SIGNAL('complete'), lambda: print("huzzah!"))
+        #self.connect(sender, QtCore.SIGNAL('complete'), lambda: print("huzzah!"))
         self.connect(sender, QtCore.SIGNAL('error'), lambda: print("failz!"))
 
+    def show_result(self, result):
+        tab_ui = self.tabs[result["tabID"]]
+        #tab_index = self.ui.tab_bar.indexOf(tab_ui)
+        if result["Success"]:
+            print(result)
+
+            output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
+                                                                       result['Message'], result["PacketSize"],
+                                                                       result['Responder'], result['Delay'])
+            output_box = tab_ui.output_textedit
+            output_box.moveCursor(QtGui.QTextCursor.End)
+            output_box.insertPlainText(output)
+            output_box.moveCursor(QtGui.QTextCursor.End)
+            #tab_ui.output_textedit.a
 
 if __name__ == '__main__':
     PingPung()
