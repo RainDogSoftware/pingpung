@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'pplib/pingpung.ui'
 #
-# Created: Mon Sep  1 12:14:12 2014
+# Created: Mon Sep  1 12:45:16 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!

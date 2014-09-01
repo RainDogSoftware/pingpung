@@ -1,4 +1,6 @@
 import sys
+import time
+from itertools import count
 
 from PyQt4 import QtCore, QtGui
 
@@ -62,8 +64,9 @@ class PingPung(QtGui.QMainWindow):
         self.ui.tab_bar.removeTab(0)
         self.ui.tab_bar.removeTab(0)
 
+        self.counter_iter = count()
         self.new_tab()
-
+        self.new_tab()
 
         self.show()
         sys.exit(app.exec_())
@@ -73,18 +76,30 @@ class PingPung(QtGui.QMainWindow):
         tab_ui = pptab.Ui_tab_container()
         new_tab_object = QtGui.QWidget()
         tab_ui.setupUi(new_tab_object)
+        tab_ui.tab_id = next(self.counter_iter)
+        tab_ui.ip_line.returnPressed.connect(lambda: self.start_ping(tab_ui))
+
         self.ui.tab_bar.addTab(new_tab_object, "New Tab")
 
-    def connect_keys(self):
-        #self.ui.ip_box.returnPressed.connect(self.start_ping)
-        #self.ui.session_box.returnPressed.connect(self.start_ping)
-        pass
+    def start_ping(self, tab_ui):
 
-
-    def start_ping(self):
-        ip = self.ui
-        ping_thread = PingThread()
+        ip = tab_ui.ip_line.text().strip()
+        # TODO:  Try/catch with error gui
+        ping_count = int(tab_ui.ping_count_line.text().strip())
+        interval = int(tab_ui.interval_line.text().strip())
+        # ip, ping_count, interval, packet_size, tab_id
+        # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
+        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        self.connect_slots(tab_ui.thread)
+        tab_ui.thread.start()
+        #ping_thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
         print("Start signal Acquired!")
+
+    def connect_slots(self, sender):
+        #self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
+        #self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
+        self.connect(sender, QtCore.SIGNAL('complete'), lambda: print("huzzah!"))
+        self.connect(sender, QtCore.SIGNAL('error'), lambda: print("failz!"))
 
 
 if __name__ == '__main__':
