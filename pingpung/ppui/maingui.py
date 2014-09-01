@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'pplib/pingpung.ui'
+# Form implementation generated from reading ui file 'ppui/maingui.ui'
 #
-# Created: Mon Sep  1 12:45:16 2014
+# Created: Mon Sep  1 16:03:09 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -29,8 +29,8 @@ class Ui_MainWindow(object):
         MainWindow.resize(876, 649)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.gridLayout = QtGui.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.verticalLayout = QtGui.QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.tab_bar = QtGui.QTabWidget(self.centralwidget)
         self.tab_bar.setEnabled(True)
         self.tab_bar.setTabsClosable(True)
@@ -45,7 +45,7 @@ class Ui_MainWindow(object):
         self.tab_2.setEnabled(False)
         self.tab_2.setObjectName(_fromUtf8("tab_2"))
         self.tab_bar.addTab(self.tab_2, _fromUtf8(""))
-        self.gridLayout.addWidget(self.tab_bar, 0, 0, 1, 1)
+        self.verticalLayout.addWidget(self.tab_bar)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 876, 27))
