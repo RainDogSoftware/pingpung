@@ -84,11 +84,12 @@ class PingPung(QtGui.QMainWindow):
         new_tab_object = QtGui.QWidget()
         tab_ui.setupUi(new_tab_object)
         tab_ui.tab_id = next(self.counter_iter)
-        # This is a dictionary of all tabs by ID number, so that they can be referenced later by number
+        # This is a dictionary of tabs keyed by ID number, so that they can be referenced later even if index changes
         self.tabs[tab_ui.tab_id] = tab_ui
         tab_ui.ip_line.returnPressed.connect(lambda: self.start_ping(tab_ui))
+        tab_ui.toggle_start.clicked.connect(lambda: self.start_ping(tab_ui))
 
-        self.ui.tab_bar.addTab(new_tab_object, "New Tab")
+        self.ui.tab_bar.addTab(new_tab_object, name)
 
     def start_ping(self, tab_ui):
         ip = tab_ui.ip_line.text().strip()
@@ -121,6 +122,13 @@ class PingPung(QtGui.QMainWindow):
             output_box.insertPlainText(output)
             output_box.moveCursor(QtGui.QTextCursor.End)
             #tab_ui.output_textedit.a
+
+        stats = tab_ui.stats_table
+        rows = stats.rowCount()
+        cols = stats.columnCount()
+        for row in range(rows): # Yeah right here
+            pass
+
 
 if __name__ == '__main__':
     PingPung()

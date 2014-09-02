@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'pplib/tab.ui'
+# Form implementation generated from reading ui file 'ppui/tab.ui'
 #
-# Created: Mon Sep  1 14:01:06 2014
+# Created: Mon Sep  1 20:57:41 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_tab_container(object):
     def setupUi(self, tab_container):
         tab_container.setObjectName(_fromUtf8("tab_container"))
-        tab_container.resize(777, 631)
+        tab_container.resize(891, 649)
         self.gridLayout_2 = QtGui.QGridLayout(tab_container)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.gridLayout = QtGui.QGridLayout()
@@ -49,17 +49,29 @@ class Ui_tab_container(object):
         self.ip_line_label = QtGui.QLabel(tab_container)
         self.ip_line_label.setObjectName(_fromUtf8("ip_line_label"))
         self.gridLayout.addWidget(self.ip_line_label, 0, 0, 1, 1)
-        self.tableWidget = QtGui.QTableWidget(tab_container)
-        self.tableWidget.setAlternatingRowColors(True)
-        self.tableWidget.setRowCount(12)
-        self.tableWidget.setColumnCount(2)
-        self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
-        self.tableWidget.horizontalHeader().setVisible(False)
-        self.tableWidget.horizontalHeader().setMinimumSectionSize(40)
-        self.tableWidget.horizontalHeader().setStretchLastSection(True)
-        self.tableWidget.verticalHeader().setVisible(False)
-        self.tableWidget.verticalHeader().setStretchLastSection(True)
-        self.gridLayout.addWidget(self.tableWidget, 2, 4, 1, 1)
+        self.stats_table = QtGui.QTableWidget(tab_container)
+        self.stats_table.setAlternatingRowColors(True)
+        self.stats_table.setRowCount(12)
+        self.stats_table.setColumnCount(2)
+        self.stats_table.setObjectName(_fromUtf8("stats_table"))
+        item = QtGui.QTableWidgetItem()
+        self.stats_table.setItem(0, 0, item)
+        item = QtGui.QTableWidgetItem()
+        self.stats_table.setItem(1, 0, item)
+        item = QtGui.QTableWidgetItem()
+        self.stats_table.setItem(2, 0, item)
+        item = QtGui.QTableWidgetItem()
+        self.stats_table.setItem(4, 0, item)
+        item = QtGui.QTableWidgetItem()
+        self.stats_table.setItem(5, 0, item)
+        item = QtGui.QTableWidgetItem()
+        self.stats_table.setItem(6, 0, item)
+        self.stats_table.horizontalHeader().setVisible(False)
+        self.stats_table.horizontalHeader().setMinimumSectionSize(40)
+        self.stats_table.horizontalHeader().setStretchLastSection(True)
+        self.stats_table.verticalHeader().setVisible(False)
+        self.stats_table.verticalHeader().setStretchLastSection(True)
+        self.gridLayout.addWidget(self.stats_table, 2, 4, 1, 1)
         self.groupBox = QtGui.QGroupBox(tab_container)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
         self.verticalLayout = QtGui.QVBoxLayout(self.groupBox)
@@ -99,6 +111,21 @@ class Ui_tab_container(object):
         self.ip_line.setText(_translate("tab_container", "127.0.0.1", None))
         self.toggle_start.setText(_translate("tab_container", "Start", None))
         self.ip_line_label.setText(_translate("tab_container", "IP or Domain Name", None))
+        __sortingEnabled = self.stats_table.isSortingEnabled()
+        self.stats_table.setSortingEnabled(False)
+        item = self.stats_table.item(0, 0)
+        item.setText(_translate("tab_container", "Success", None))
+        item = self.stats_table.item(1, 0)
+        item.setText(_translate("tab_container", "Fail", None))
+        item = self.stats_table.item(2, 0)
+        item.setText(_translate("tab_container", "Percent Success", None))
+        item = self.stats_table.item(4, 0)
+        item.setText(_translate("tab_container", "Highest Latency", None))
+        item = self.stats_table.item(5, 0)
+        item.setText(_translate("tab_container", "Lowest Latency", None))
+        item = self.stats_table.item(6, 0)
+        item.setText(_translate("tab_container", "Average Latency", None))
+        self.stats_table.setSortingEnabled(__sortingEnabled)
         self.groupBox.setTitle(_translate("tab_container", "GroupBox", None))
         self.toggle_audio.setText(_translate("tab_container", "Enable Audio", None))
         self.radioButton.setText(_translate("tab_container", "Alert on Success", None))
