@@ -123,11 +123,16 @@ class PingPung(QtGui.QMainWindow):
             output_box.moveCursor(QtGui.QTextCursor.End)
             #tab_ui.output_textedit.a
 
-        stats = tab_ui.stats_table
-        rows = stats.rowCount()
-        cols = stats.columnCount()
-        for row in range(rows): # Yeah right here
-            pass
+        self.update_stats(result, tab_ui)
+        #stats = tab_ui.stats_table
+        #rows = stats.rowCount()
+        #cols = stats.columnCount()
+        #for row in range(result): # Yeah right here
+        #    stats.setItem(row,0,QtGui.QTableWidgetItem("stuff"))
+        #stats.setItem(0,0,QtGui.QTableWidgetItem("stuff"))
+
+    def update_stats(self, result, tab_ui):
+        pass
 
 
 if __name__ == '__main__':
