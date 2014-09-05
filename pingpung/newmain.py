@@ -84,6 +84,8 @@ class PingPung(QtGui.QMainWindow):
         new_tab_object = QtGui.QWidget()
         tab_ui.setupUi(new_tab_object)
         tab_ui.tab_id = next(self.counter_iter)
+        self.init_stats(tab_ui)
+
         # This is a dictionary of tabs keyed by ID number, so that they can be referenced later even if index changes
         self.tabs[tab_ui.tab_id] = tab_ui
         tab_ui.ip_line.returnPressed.connect(lambda: self.start_ping(tab_ui))
@@ -124,15 +126,30 @@ class PingPung(QtGui.QMainWindow):
             #tab_ui.output_textedit.a
 
         self.update_stats(result, tab_ui)
-        #stats = tab_ui.stats_table
+        #
         #rows = stats.rowCount()
         #cols = stats.columnCount()
         #for row in range(result): # Yeah right here
         #    stats.setItem(row,0,QtGui.QTableWidgetItem("stuff"))
         #stats.setItem(0,0,QtGui.QTableWidgetItem("stuff"))
 
+    def init_stats(self, tab_ui):
+        #print("init stats")
+        tab_ui.stats_table.setItem(0,1,QtGui.QTableWidgetItem("0"))
+        #print(tab_ui.stats_table.item(0,1).text())
+        tab_ui.stats_table.setItem(1,1,QtGui.QTableWidgetItem("0"))
+
+
     def update_stats(self, result, tab_ui):
-        pass
+        stats = tab_ui.stats_table
+        if result["Success"]:
+            # Update success count.  The math must be done with integers (of course) but table expects strings.
+            current = int(stats.item(0,1).text())
+            stats.setItem(0,1,QtGui.QTableWidgetItem(str(current + 1)))
+        else:
+            current = int(stats.item(1,1).text())
+            stats.setItem(0,1,QtGui.QTableWidgetItem(str(current + 1)))
+
 
 
 if __name__ == '__main__':

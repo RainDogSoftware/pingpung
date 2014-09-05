@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ppui/tab.ui'
+# Form implementation generated from reading ui file 'ppui/pptab.ui'
 #
-# Created: Mon Sep  1 20:57:41 2014
-#      by: PyQt4 UI code generator 4.10.3
+# Created: Fri Sep  5 13:53:07 2014
+#      by: PyQt4 UI code generator 4.11.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -113,18 +113,6 @@ class Ui_tab_container(object):
         self.ip_line_label.setText(_translate("tab_container", "IP or Domain Name", None))
         __sortingEnabled = self.stats_table.isSortingEnabled()
         self.stats_table.setSortingEnabled(False)
-        item = self.stats_table.item(0, 0)
-        item.setText(_translate("tab_container", "Success", None))
-        item = self.stats_table.item(1, 0)
-        item.setText(_translate("tab_container", "Fail", None))
-        item = self.stats_table.item(2, 0)
-        item.setText(_translate("tab_container", "Percent Success", None))
-        item = self.stats_table.item(4, 0)
-        item.setText(_translate("tab_container", "Highest Latency", None))
-        item = self.stats_table.item(5, 0)
-        item.setText(_translate("tab_container", "Lowest Latency", None))
-        item = self.stats_table.item(6, 0)
-        item.setText(_translate("tab_container", "Average Latency", None))
         self.stats_table.setSortingEnabled(__sortingEnabled)
         self.groupBox.setTitle(_translate("tab_container", "GroupBox", None))
         self.toggle_audio.setText(_translate("tab_container", "Enable Audio", None))
