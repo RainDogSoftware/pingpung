@@ -99,6 +99,8 @@ class PingPung(QtGui.QMainWindow):
         ping_count = int(tab_ui.ping_count_line.text().strip())
         interval = int(tab_ui.interval_line.text().strip())
 
+        #tab_ui.setTabText(ip)
+
         # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
         tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
         self.connect_slots(tab_ui.thread)
@@ -106,49 +108,50 @@ class PingPung(QtGui.QMainWindow):
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
-        #self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-        #self.connect(sender, QtCore.SIGNAL('complete'), lambda: print("huzzah!"))
-        self.connect(sender, QtCore.SIGNAL('error'), lambda: print("failz!"))
+        self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
 
     def show_result(self, result):
+        # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        #tab_index = self.ui.tab_bar.indexOf(tab_ui)
+        print(dir(tab_ui))
+        tab_ui.currentWidget.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
+        #self.ui.tab_bar().setTabTextColor
         if result["Success"]:
-            print(result)
-
+            #print(result)
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
                                                                        result['Message'], result["PacketSize"],
                                                                        result['Responder'], result['Delay'])
-            output_box = tab_ui.output_textedit
-            output_box.moveCursor(QtGui.QTextCursor.End)
-            output_box.insertPlainText(output)
-            output_box.moveCursor(QtGui.QTextCursor.End)
-            #tab_ui.output_textedit.a
+        else:
+            output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
+
+        output_box = tab_ui.output_textedit
+        output_box.moveCursor(QtGui.QTextCursor.End)
+        output_box.insertPlainText(output)
+        output_box.moveCursor(QtGui.QTextCursor.End)
+
+
 
         self.update_stats(result, tab_ui)
-        #
-        #rows = stats.rowCount()
-        #cols = stats.columnCount()
-        #for row in range(result): # Yeah right here
-        #    stats.setItem(row,0,QtGui.QTableWidgetItem("stuff"))
-        #stats.setItem(0,0,QtGui.QTableWidgetItem("stuff"))
+
+    def show_error(self, message):
+        QtGui.QMessageBox.about(self, "OH TEH NOES!", message)
+
 
     def init_stats(self, tab_ui):
-        #print("init stats")
+        tab_ui.stats_table.setItem(0,0,QtGui.QTableWidgetItem("Successes"))
         tab_ui.stats_table.setItem(0,1,QtGui.QTableWidgetItem("0"))
-        #print(tab_ui.stats_table.item(0,1).text())
+        tab_ui.stats_table.setItem(1,0,QtGui.QTableWidgetItem("Failures"))
         tab_ui.stats_table.setItem(1,1,QtGui.QTableWidgetItem("0"))
-
 
     def update_stats(self, result, tab_ui):
         stats = tab_ui.stats_table
         if result["Success"]:
-            # Update success count.  The math must be done with integers (of course) but table expects strings.
+            # Update success and fail counts.  The math must be done with integers (of course) but table expects strings
             current = int(stats.item(0,1).text())
-            stats.setItem(0,1,QtGui.QTableWidgetItem(str(current + 1)))
+            stats.setItem(0, 1, QtGui.QTableWidgetItem(str(current + 1)))
         else:
             current = int(stats.item(1,1).text())
-            stats.setItem(0,1,QtGui.QTableWidgetItem(str(current + 1)))
+            stats.setItem(1, 1, QtGui.QTableWidgetItem(str(current + 1)))
 
 
 
