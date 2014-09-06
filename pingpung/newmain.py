@@ -1,5 +1,6 @@
 import sys
 import time
+import datetime
 from itertools import count
 
 from PyQt4 import QtCore, QtGui
@@ -101,10 +102,22 @@ class PingPung(QtGui.QMainWindow):
 
         #tab_ui.setTabText(ip)
 
-        # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
+        # Check if running, then initialize the thread with appropriate data, connect the slots (lalalalala) and start
+        try:
+            tab_ui.thread.terminate()
+        except AttributeError:
+            pass
+
         tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
         self.connect_slots(tab_ui.thread)
         tab_ui.thread.start()
+
+    def stop_ping(self, tab_ui, silent=False):
+        if not silent:
+            tab_ui.output_textedit.moveCursor(QtGui.QTextCursor.End)
+            tab_ui.output_textedit.insertPlainText("Ping stopped manually at " + str(datetime.datetime.now()).split('.')[0])
+        print("DESTROY!")
+        tab_ui.thread.terminate()
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
@@ -113,8 +126,8 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        print(dir(tab_ui))
-        tab_ui.currentWidget.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
+        #print(dir(tab_ui))
+        #tab_ui.currentWidget.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
         #self.ui.tab_bar().setTabTextColor
         if result["Success"]:
             #print(result)
