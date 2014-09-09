@@ -113,9 +113,10 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        print(dir(tab_ui))
-        tab_ui.currentWidget.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
-        #self.ui.tab_bar().setTabTextColor
+        print(type(tab_ui))
+        #tab_ui.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
+        index = self.ui.tab_bar.indexOf(tab_ui)
+        self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
         if result["Success"]:
             #print(result)
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
