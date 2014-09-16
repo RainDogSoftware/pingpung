@@ -21,7 +21,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>-1</number>
       </property>
       <property name="tabsClosable">
        <bool>true</bool>
@@ -29,20 +29,6 @@
       <property name="movable">
        <bool>true</bool>
       </property>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>New Tab</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_2"/>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <attribute name="title">
-        <string>Tab 2</string>
-       </attribute>
-      </widget>
      </widget>
     </item>
    </layout>

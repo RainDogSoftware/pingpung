@@ -59,8 +59,8 @@ class PingPung(QtGui.QMainWindow):
         self.ui = uic.loadUi('ppui/maingui.ui')
         self.ui.show()
         # Hack until I get around to making Designer go the way I want
-        self.ui.tab_bar.removeTab(0)
-        self.ui.tab_bar.removeTab(0)
+        #self.ui.tab_bar.removeTab(0)
+        #self.ui.tab_bar.removeTab(0)
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
