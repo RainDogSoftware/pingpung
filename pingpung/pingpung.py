@@ -1,6 +1,7 @@
 import sys
 import time
 from itertools import count
+from gettext import gettext as _
 
 from PyQt4 import QtCore, QtGui, uic
 
@@ -24,7 +25,7 @@ class PingThread(QtCore.QThread):
 
     def __init__(self, ip, ping_count, interval, packet_size, tab_id):
         self.ip = ip
-        self.ping_count = ping_count
+        self.ping_count = int(ping_count)
         self.interval = interval
         self.packet_size = packet_size
         self.tab_id = tab_id
@@ -37,14 +38,7 @@ class PingThread(QtCore.QThread):
             # Cannot accept sequence number > 65535.  This resets seq number but does not affect stats totals
             if pcount > 65535:
                 pcount = 0
-            try:
                 self.result = pping.ping(self.ip, 1000, pcount, self.packet_size)
-            except pping.SocketError:
-                self.emit(QtCore.SIGNAL('error'), "Socket error.  Verify that program is running as root/admin.")
-                break
-            except pping.AddressError:
-                self.emit(QtCore.SIGNAL('error'), "Address error.  Bad IP address or domain name.")
-                break
             else:
                 self.result["tabID"] = self.tab_id
                 self.emit(QtCore.SIGNAL('complete'), self.result)
@@ -93,12 +87,20 @@ class PingPung(QtGui.QMainWindow):
 
     def start_ping(self, tab_ui):
         ip = tab_ui.ip_line.text().strip()
-        # TODO:  Try/catch with error gui
-        ping_count = int(tab_ui.ping_count_line.text().strip())
+        ping_count = tab_ui.ping_count_line.text().strip()
+
         interval = int(tab_ui.interval_line.text().strip())
 
         # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
-        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        try:
+            tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        except ValueError:
+            self.show_error("Invalid input")
+        except pping.SocketError:
+            self.show_error("Socket Error.  verify that programming is running as root/admin.  See README for details.")
+        except pping.AddressError:
+            self.show_error("Address error.  Check IP/domain setting.")
+
         self.connect_slots(tab_ui.thread)
         tab_ui.thread.start()
 
@@ -130,7 +132,7 @@ class PingPung(QtGui.QMainWindow):
         self.update_stats(result, tab_ui)
 
     def show_error(self, message):
-        QtGui.QMessageBox.about(self, "OH TEH NOES!", message)
+        QtGui.QMessageBox.about(self, "I'm sad now.", _(message))
 
 
     def init_stats(self, tab_ui):
