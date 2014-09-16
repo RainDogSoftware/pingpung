@@ -1,6 +1,5 @@
 import sys
 import time
-import datetime
 from itertools import count
 
 from PyQt4 import QtCore, QtGui
@@ -89,26 +88,23 @@ class PingPung(QtGui.QMainWindow):
 
         # This is a dictionary of tabs keyed by ID number, so that they can be referenced later even if index changes
         self.tabs[tab_ui.tab_id] = tab_ui
-
-        tab_ui.ip_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
-        tab_ui.toggle_start.clicked.connect(lambda: self.run_button_action(tab_ui))
+        tab_ui.ip_line.returnPressed.connect(lambda: self.start_ping(tab_ui))
+        tab_ui.toggle_start.clicked.connect(lambda: self.start_ping(tab_ui))
 
         self.ui.tab_bar.addTab(new_tab_object, name)
 
-    def run_button_action(self, tab_ui):
-        #if this tab contains a running thread, terminate it
-        if hasattr(tab_ui, "thread") and (tab_ui.thread.isRunning() is True):
-            tab_ui.thread.terminate()
-            tab_ui.toggle_start.setText("Start")
-        else:
-            ip = tab_ui.ip_line.text().strip()
-            # TODO:  Try/catch with error gui
-            ping_count = int(tab_ui.ping_count_line.text().strip())
-            interval = int(tab_ui.interval_line.text().strip())
-            tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
-            self.connect_slots(tab_ui.thread)
-            tab_ui.thread.start()
-            tab_ui.toggle_start.setText("Stop")
+    def start_ping(self, tab_ui):
+        ip = tab_ui.ip_line.text().strip()
+        # TODO:  Try/catch with error gui
+        ping_count = int(tab_ui.ping_count_line.text().strip())
+        interval = int(tab_ui.interval_line.text().strip())
+
+        #tab_ui.setTabText(ip)
+
+        # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
+        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        self.connect_slots(tab_ui.thread)
+        tab_ui.thread.start()
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
@@ -117,9 +113,10 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        #print(dir(tab_ui))
-        #tab_ui.currentWidget.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
-        #self.ui.tab_bar().setTabTextColor
+        print(type(tab_ui))
+        #tab_ui.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
+        index = self.ui.tab_bar.indexOf(tab_ui)
+        self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
         if result["Success"]:
             #print(result)
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
