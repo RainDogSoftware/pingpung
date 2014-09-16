@@ -1,26 +1,25 @@
 try:
     from cx_Freeze import setup, Executable
+    executables = [Executable('pingpung/pingpung.py', base="Win32Gui"),]
 except ImportError:
-    pass
-
+    from setuptools import setup
+    executables = None
 import sys
 
-base = 'Win32GUI' if sys.platform=='win32' else None
-
 sys.path.append("pingpung")
-buildOptions = dict(path=sys.path,
+
+exe_build_options = dict(path=sys.path,
                     include_files=["pingpung/data"],
                     icon='pingpung/data/icon.ico',
                     excludes = ["tkinter"],
-                    base = base)
+                    base = 'Win32GUI')
 
-executables = [
-    Executable('pingpung/pingpung.py', base=base)
-]
+
 
 setup(name='PingPung',
-      version = '0.0.3',
+      version = '0.0.4',
       description = 'Python3/QT4 Multiplatform Ping Application',
-      options = dict(build_exe = buildOptions),
+      options = dict(build_exe = exe_build_options),
       executables = executables,
+      test_suite = "tests",
 )
