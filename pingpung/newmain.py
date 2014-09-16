@@ -2,10 +2,9 @@ import sys
 import time
 from itertools import count
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore, QtGui, uic
 
 from pplib import pping, audio
-from ppui import maingui, pptab
 
 class PingThread(QtCore.QThread):
     """ A QThread subclass for running the pings.
@@ -57,10 +56,9 @@ class PingPung(QtGui.QMainWindow):
         app = QtGui.QApplication(sys.argv)
         super(PingPung, self).__init__()
 
-        self.ui = maingui.Ui_MainWindow()
-        self.ui.setupUi(self)
-
-        # Hack until I can get Designer to only start with 1 tab
+        self.ui = uic.loadUi('ppui/maingui.ui')
+        self.ui.show()
+        # Hack until I get around to making Designer go the way I want
         self.ui.tab_bar.removeTab(0)
         self.ui.tab_bar.removeTab(0)
 
@@ -75,23 +73,25 @@ class PingPung(QtGui.QMainWindow):
         self.new_tab()
         self.new_tab()
 
-        self.show()
+        #self.show()
         sys.exit(app.exec_())
 
     def new_tab(self, name="New Tab"):
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases
-        tab_ui = pptab.Ui_tab_container()
+        #tab_ui = pptab.Ui_tab_container()
+        tab_ui = uic.loadUi('ppui/pptab.ui')
         new_tab_object = QtGui.QWidget()
-        tab_ui.setupUi(new_tab_object)
+        #tab_ui.setupUi(new_tab_object)
         tab_ui.tab_id = next(self.counter_iter)
         self.init_stats(tab_ui)
+        #tab_ui.show()
 
         # This is a dictionary of tabs keyed by ID number, so that they can be referenced later even if index changes
         self.tabs[tab_ui.tab_id] = tab_ui
         tab_ui.ip_line.returnPressed.connect(lambda: self.start_ping(tab_ui))
         tab_ui.toggle_start.clicked.connect(lambda: self.start_ping(tab_ui))
 
-        self.ui.tab_bar.addTab(new_tab_object, name)
+        self.ui.tab_bar.addTab(tab_ui, name)
 
     def start_ping(self, tab_ui):
         ip = tab_ui.ip_line.text().strip()
@@ -113,12 +113,11 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        print(type(tab_ui))
-        #tab_ui.setTabTextColor(tab_ui.currentIndex, QtGui.QColor(0, 128, 0))
-        index = self.ui.tab_bar.indexOf(tab_ui)
-        self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
+
+        #TODO:  Get tab title colorization working
+        #index = self.ui.tab_bar.indexOf(tab_ui)
+        #self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
         if result["Success"]:
-            #print(result)
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
                                                                        result['Message'], result["PacketSize"],
                                                                        result['Responder'], result['Delay'])
