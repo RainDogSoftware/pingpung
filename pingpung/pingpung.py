@@ -64,21 +64,18 @@ class PingPung(QtGui.QMainWindow):
         self.new_tab()
         self.new_tab()
 
-        #self.show()
         sys.exit(app.exec_())
 
     def new_tab(self, name="New Tab"):
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases
-        #tab_ui = pptab.Ui_tab_container()
         tab_ui = uic.loadUi('ppui/pptab.ui')
-        new_tab_object = QtGui.QWidget()
-        #tab_ui.setupUi(new_tab_object)
         tab_ui.tab_id = next(self.counter_iter)
         self.init_stats(tab_ui)
-        #tab_ui.show()
 
         # This is a dictionary of tabs keyed by ID number, so that they can be referenced later even if index changes
         self.tabs[tab_ui.tab_id] = tab_ui
+
+        # Connect enter key to start/stop ping in tab, connect start/stop button as well
         tab_ui.ip_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
         tab_ui.toggle_start.clicked.connect(lambda: self.run_button_action(tab_ui))
 
@@ -143,12 +140,11 @@ class PingPung(QtGui.QMainWindow):
         else:
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
 
+        # Move cursor to end, append text, move to end again.  Because reasons.
         output_box = tab_ui.output_textedit
         output_box.moveCursor(QtGui.QTextCursor.End)
-        output_box.insertPlainText(output)
+        output_box.insertPlainText(_(output))
         output_box.moveCursor(QtGui.QTextCursor.End)
-
-
 
         self.update_stats(result, tab_ui)
 
@@ -171,8 +167,6 @@ class PingPung(QtGui.QMainWindow):
         else:
             current = int(stats.item(1,1).text())
             stats.setItem(1, 1, QtGui.QTableWidgetItem(str(current + 1)))
-
-
 
 if __name__ == '__main__':
     PingPung()
