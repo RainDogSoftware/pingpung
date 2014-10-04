@@ -50,7 +50,7 @@ class PingPung(QtGui.QMainWindow):
         super(PingPung, self).__init__()
 
         self.ui = uic.loadUi('ppui/maingui.ui')
-        self.ui.show()
+
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
@@ -60,13 +60,21 @@ class PingPung(QtGui.QMainWindow):
         self.tabs = {}
         self.counter_iter = count()
 
+        # Functionality for adding and removing tabs
+        self.tabButton = QtGui.QToolButton(self)
+        self.tabButton.setText('+')
+        self.ui.tab_bar.setCornerWidget(self.tabButton)
+        self.tabButton.clicked.connect(self.new_tab)
+        self.ui.tab_bar.tabCloseRequested.connect(self.ui.tab_bar.removeTab)
+
         # Always start with one tab
-        self.new_tab()
+        #self.new_tab()
         self.new_tab()
 
+        self.ui.show()
         sys.exit(app.exec_())
 
-    def new_tab(self, name="New Tab"):
+    def new_tab(self, *args):
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases
         tab_ui = uic.loadUi('ppui/pptab.ui')
         tab_ui.tab_id = next(self.counter_iter)
@@ -79,7 +87,17 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.ip_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
         tab_ui.toggle_start.clicked.connect(lambda: self.run_button_action(tab_ui))
 
-        self.ui.tab_bar.addTab(tab_ui, name)
+        self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
+
+    def current_index(self):
+        """
+         Because we're using 2 forms, one for the main window ui and one for the tabs, the tab widget
+         as supplied by Qt Designer is not a "normal" tab widget.  We've got to use it to retrieve the index of the
+         widget
+        """
+        current = self.ui.tab_bar.currentWidget()
+        return self.ui.tab_bar.indexOf(current)
+
 
     def start_ping(self, tab_ui):
         ip = tab_ui.ip_line.text().strip()
@@ -103,7 +121,7 @@ class PingPung(QtGui.QMainWindow):
             self.show_error("Address error.  Check IP/domain setting.")
 
         self.connect_slots(tab_ui.thread)
-        tab_ui.toggle_start.setText("Stop")
+        tab_ui.toggle_start.setText(_("Stop"))
 
         tab_ui.thread.start()
 
@@ -120,7 +138,10 @@ class PingPung(QtGui.QMainWindow):
             tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
             self.connect_slots(tab_ui.thread)
             tab_ui.thread.start()
+
+            # Update GUI labels
             tab_ui.toggle_start.setText("Stop")
+            self.ui.tab_bar.setTabText(self.current_index(), " ".join([ip,tab_ui.session_line.text()]))
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
@@ -129,15 +150,16 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
+        #INDEX!
+        index = self.current_index()
 
-        #TODO:  Get tab title colorization working
-        #index = self.ui.tab_bar.indexOf(tab_ui)
-        #self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
         if result["Success"]:
+            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
                                                                        result['Message'], result["PacketSize"],
                                                                        result['Responder'], result['Delay'])
         else:
+            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
 
         # Move cursor to end, append text, move to end again.  Because reasons.

@@ -262,7 +262,7 @@ def ping(dest_ip, timeout, seq_number, num_data_bytes):
     try:  # One could use UDP here
         this_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
     except socket.error:
-        raise SocketError
+        raise SocketError("Unable to create socket.  Verify app is running as root/admin.  \nSee README for details.")
   
     # To make "unique" socket IDs for safe threading.  
     # Each ping gets a socket ID number from a 1-65535 cycling iterator.  
