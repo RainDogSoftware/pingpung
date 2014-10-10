@@ -22,5 +22,5 @@ class SoundThread(threading.Thread):
             winsound.PlaySound(self.wav_file, winsound.SND_FILENAME)
         else:
             # TODO:  Add non-win audio support
-            print("Audio not yet available on this platform")
+            print(self.wav_file, "Audio not yet available on this platform")
 

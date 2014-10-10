@@ -170,9 +170,13 @@ class PingPung(QtGui.QMainWindow):
             output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
                                                                        result['Message'], result["PacketSize"],
                                                                        result['Responder'], result['Delay'])
+            if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
+                audio.play("data/woohoo.wav")
         else:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
             output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
+            if tab_ui.toggle_audio.isChecked() and tab_ui.alert_failure.isChecked():
+                audio.play("data/doh.wav")
 
         # Move cursor to end, append text, move to end again.  Because reasons.
         output_box = tab_ui.output_textedit

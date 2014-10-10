@@ -168,7 +168,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="radioButton">
+         <widget class="QRadioButton" name="alert_success">
           <property name="text">
            <string>Alert on Success</string>
           </property>
@@ -178,7 +178,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="radioButton_2">
+         <widget class="QRadioButton" name="alert_failure">
           <property name="text">
            <string>Alert on Failure</string>
           </property>
