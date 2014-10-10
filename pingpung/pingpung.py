@@ -90,11 +90,6 @@ class PingPung(QtGui.QMainWindow):
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
 
     def current_index(self):
-        """
-         Because we're using 2 forms, one for the main window ui and one for the tabs, the tab widget
-         as supplied by Qt Designer is not a "normal" tab widget.  We've got to use it to retrieve the index of the
-         widget
-        """
         current = self.ui.tab_bar.currentWidget()
         return self.ui.tab_bar.indexOf(current)
 
@@ -150,8 +145,7 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        #INDEX!
-        index = self.current_index()
+        index = self.ui.tab_bar.indexOf(tab_ui)
 
         if result["Success"]:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
@@ -177,6 +171,7 @@ class PingPung(QtGui.QMainWindow):
     def init_stats(self, tab_ui):
         tab_ui.stats_table.setItem(0,0,QtGui.QTableWidgetItem("Successes"))
         tab_ui.stats_table.setItem(0,1,QtGui.QTableWidgetItem("0"))
+
         tab_ui.stats_table.setItem(1,0,QtGui.QTableWidgetItem("Failures"))
         tab_ui.stats_table.setItem(1,1,QtGui.QTableWidgetItem("0"))
 
