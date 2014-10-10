@@ -87,7 +87,17 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.ip_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
         tab_ui.toggle_start.clicked.connect(lambda: self.run_button_action(tab_ui))
 
+        # Connect the clear/save log buttons to actions
+        tab_ui.clear_log_button.clicked.connect(lambda: self.clear_log(tab_ui))
+
+
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
+
+    def clear_log(self, tab_ui):
+        tab_ui.output_textedit.clear()
+        stats = tab_ui.stats_table
+        stats.setItem(0,1, QtGui.QTableWidgetItem("0"))
+        stats.setItem(1,1, QtGui.QTableWidgetItem("0"))
 
     def current_index(self):
         current = self.ui.tab_bar.currentWidget()
