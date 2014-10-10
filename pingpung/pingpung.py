@@ -101,16 +101,21 @@ class PingPung(QtGui.QMainWindow):
         stats.setItem(1,1, QtGui.QTableWidgetItem("0"))
 
     def save_log(self, tab_ui):
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '')
+        file_types = "Plain Text (*.txt);;Plain Text (*.log)"
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
         if len(filename) > 0:
             file_handle = open(filename, 'w')
-            file_handle.write(tab_ui.output_textedit.toPlainText())
-            file_handle.close()
+            try:
+                file_handle.write(tab_ui.output_textedit.toPlainText())
+                file_handle.close()
+            except Exception as e:
+                # I don't normally do blanket exceptions, but in this case any error means we can't save file so
+                # it all has the same effect.  Notify the user and move along.
+                self.show_error("Unable to save log file")
 
     def current_index(self):
         current = self.ui.tab_bar.currentWidget()
         return self.ui.tab_bar.indexOf(current)
-
 
     def start_ping(self, tab_ui):
         ip = tab_ui.ip_line.text().strip()
