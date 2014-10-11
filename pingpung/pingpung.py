@@ -114,6 +114,11 @@ class PingPung(QtGui.QMainWindow):
                 self.show_error("Unable to save log file")
 
     def current_index(self):
+        """
+         Because we're using 2 forms, one for the main window ui and one for the tabs, the tab widget
+         as supplied by Qt Designer is not a "normal" tab widget.  We've got to use it to retrieve the index of the
+         widget
+        """
         current = self.ui.tab_bar.currentWidget()
         return self.ui.tab_bar.indexOf(current)
 
@@ -129,8 +134,13 @@ class PingPung(QtGui.QMainWindow):
             pass
 
         # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
+        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+
+        self.connect_slots(tab_ui.thread)
+        tab_ui.toggle_start.setText(_("Stop"))
+
         try:
-            tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+            tab_ui.thread.start()
         except ValueError:
             self.show_error("Invalid input")
         except pping.SocketError:
@@ -138,16 +148,12 @@ class PingPung(QtGui.QMainWindow):
         except pping.AddressError:
             self.show_error("Address error.  Check IP/domain setting.")
 
-        self.connect_slots(tab_ui.thread)
-        tab_ui.toggle_start.setText(_("Stop"))
-
-        tab_ui.thread.start()
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
         if hasattr(tab_ui, "thread") and hasattr(tab_ui.thread, "isRunning") and (tab_ui.thread.isRunning() is True):
             tab_ui.thread.terminate()
-            tab_ui.toggle_start.setText("Start")
+            tab_ui.toggle_start.setText(_("Start"))
         else:
             ip = tab_ui.ip_line.text().strip()
             # TODO:  Try/catch with error gui
@@ -196,21 +202,41 @@ class PingPung(QtGui.QMainWindow):
 
 
     def init_stats(self, tab_ui):
-        tab_ui.stats_table.setItem(0,0,QtGui.QTableWidgetItem("Successes"))
+        stat_list = (("Success", "0"),
+                     ("Failures", "0"),
+                     ("", ""),
+                     ("% Success", ""),
+                     ("Highest Latency", "NI"),
+                     ("Lowest Latency", "NI"),
+        )
+        for row, item in enumerate(stat_list):
+            tab_ui.stats_table.setItem(row,0, QtGui.QTableWidgetItem(item[0]))
+            tab_ui.stats_table.setItem(row,1, QtGui.QTableWidgetItem(item[1]))
+
+        """tab_ui.stats_table.setItem(0,0,QtGui.QTableWidgetItem("Successes"))
         tab_ui.stats_table.setItem(0,1,QtGui.QTableWidgetItem("0"))
 
         tab_ui.stats_table.setItem(1,0,QtGui.QTableWidgetItem("Failures"))
         tab_ui.stats_table.setItem(1,1,QtGui.QTableWidgetItem("0"))
 
+        tab_ui.stats_table.setItem(2,0,QtGui.QTableWidgetItem("% Success"))
+        tab_ui.stats_table.setItem(2,1,QtGui.QTableWidgetItem(""))"""
+
     def update_stats(self, result, tab_ui):
+        #TODO: Make init_stats and update_stats use a common data structure.  Probably dict.
         stats = tab_ui.stats_table
+        num_good = int(stats.item(0,1).text())
+        num_bad = int(stats.item(1,1).text())
         if result["Success"]:
             # Update success and fail counts.  The math must be done with integers (of course) but table expects strings
-            current = int(stats.item(0,1).text())
-            stats.setItem(0, 1, QtGui.QTableWidgetItem(str(current + 1)))
+            num_good = int(num_good) + 1
+            stats.setItem(0, 1, QtGui.QTableWidgetItem(str(num_good)))
         else:
-            current = int(stats.item(1,1).text())
-            stats.setItem(1, 1, QtGui.QTableWidgetItem(str(current + 1)))
+            num_bad = int(num_bad) +1
+            stats.setItem(1, 1, QtGui.QTableWidgetItem(str(num_bad)))
+
+        percent = round((num_good / (num_bad + num_good)) * 100, 2)
+        stats.setItem(3,1, QtGui.QTableWidgetItem(str(percent)))
 
 if __name__ == '__main__':
     PingPung()
