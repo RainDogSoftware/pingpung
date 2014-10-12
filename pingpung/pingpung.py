@@ -1,5 +1,6 @@
 import sys
 import time
+from collections import OrderedDict
 from itertools import count
 from gettext import gettext as _
 
@@ -75,10 +76,14 @@ class PingPung(QtGui.QMainWindow):
         sys.exit(app.exec_())
 
     def new_tab(self, *args):
-        # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases
+        # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
+        # As noted in __init__, tabs must have an unchanging ID number for thread support
         tab_ui = uic.loadUi('ppui/pptab.ui')
         tab_ui.tab_id = next(self.counter_iter)
-        self.init_stats(tab_ui)
+
+        # We keep an OrderedDict of the ping statistics for each tab.  This is used directly by the stats table
+        tab_ui.stat_dict = self.get_default_stats()
+        self.refresh_stat_display(tab_ui)
 
         # This is a dictionary of tabs keyed by ID number, so that they can be referenced later even if index changes
         self.tabs[tab_ui.tab_id] = tab_ui
@@ -91,19 +96,26 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.clear_log_button.clicked.connect(lambda: self.clear_log(tab_ui))
         tab_ui.save_log_button.clicked.connect(lambda: self.save_log(tab_ui))
 
-
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
+
+    def get_default_stats(self):
+        return OrderedDict([("Success",0),
+                                ("Failure", 0),
+                                ("", ""),
+                                ("% Success", 0),
+                                ("Highest Latency", "NI"),
+                                ("Lowest Latency", "NI"),
+        ])
 
     def clear_log(self, tab_ui):
         tab_ui.output_textedit.clear()
-        stats = tab_ui.stats_table
-        stats.setItem(0,1, QtGui.QTableWidgetItem("0"))
-        stats.setItem(1,1, QtGui.QTableWidgetItem("0"))
+        tab_ui.stat_dict = self.get_default_stats()
+        self.refresh_stat_display(tab_ui)
 
     def save_log(self, tab_ui):
         file_types = "Plain Text (*.txt);;Plain Text (*.log)"
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
-        if len(filename) > 0:
+        if len(filename) > 0: # Making sure the user selected a file (didn't hit Cancel)
             file_handle = open(filename, 'w')
             try:
                 file_handle.write(tab_ui.output_textedit.toPlainText())
@@ -114,20 +126,15 @@ class PingPung(QtGui.QMainWindow):
                 self.show_error("Unable to save log file")
 
     def current_index(self):
-        """
-         Because we're using 2 forms, one for the main window ui and one for the tabs, the tab widget
-         as supplied by Qt Designer is not a "normal" tab widget.  We've got to use it to retrieve the index of the
-         widget
-        """
         current = self.ui.tab_bar.currentWidget()
         return self.ui.tab_bar.indexOf(current)
 
-    def start_ping(self, tab_ui):
+    """def start_ping(self, tab_ui):
         ip = tab_ui.ip_line.text().strip()
         ping_count = tab_ui.ping_count_line.text().strip()
         interval = int(tab_ui.interval_line.text().strip())
 
-        # Check if running, then initialize the thread with appropriate data, connect the slots (lalalalala) and start
+        # Check if running
         try:
             tab_ui.thread.terminate()
         except AttributeError:
@@ -146,8 +153,22 @@ class PingPung(QtGui.QMainWindow):
         except pping.SocketError:
             self.show_error("Socket Error.  verify that programming is running as root/admin.  See README for details.")
         except pping.AddressError:
-            self.show_error("Address error.  Check IP/domain setting.")
+            self.show_error("Address error.  Check IP/domain setting.")"""
 
+    def start_ping(self, tab_ui):
+        ip = tab_ui.ip_line.text().strip()
+        ping_count = int(tab_ui.ping_count_line.text().strip())
+        interval = int(tab_ui.interval_line.text().strip())
+
+        # TODO:  Try/catch with error gui
+        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        self.connect_slots(tab_ui.thread)
+        tab_ui.thread.start()
+
+        # Update GUI labels
+        tab_ui.toggle_start.setText(_("Stop"))
+
+        self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip,tab_ui.session_line.text()]))
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
@@ -155,17 +176,7 @@ class PingPung(QtGui.QMainWindow):
             tab_ui.thread.terminate()
             tab_ui.toggle_start.setText(_("Start"))
         else:
-            ip = tab_ui.ip_line.text().strip()
-            # TODO:  Try/catch with error gui
-            ping_count = int(tab_ui.ping_count_line.text().strip())
-            interval = int(tab_ui.interval_line.text().strip())
-            tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
-            self.connect_slots(tab_ui.thread)
-            tab_ui.thread.start()
-
-            # Update GUI labels
-            tab_ui.toggle_start.setText("Stop")
-            self.ui.tab_bar.setTabText(self.current_index(), " ".join([ip,tab_ui.session_line.text()]))
+            self.start_ping(tab_ui)
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
@@ -201,42 +212,22 @@ class PingPung(QtGui.QMainWindow):
         QtGui.QMessageBox.about(self, "I'm sad now.", _(message))
 
 
-    def init_stats(self, tab_ui):
-        stat_list = (("Success", "0"),
-                     ("Failures", "0"),
-                     ("", ""),
-                     ("% Success", ""),
-                     ("Highest Latency", "NI"),
-                     ("Lowest Latency", "NI"),
-        )
-        for row, item in enumerate(stat_list):
-            tab_ui.stats_table.setItem(row,0, QtGui.QTableWidgetItem(item[0]))
-            tab_ui.stats_table.setItem(row,1, QtGui.QTableWidgetItem(item[1]))
-
-        """tab_ui.stats_table.setItem(0,0,QtGui.QTableWidgetItem("Successes"))
-        tab_ui.stats_table.setItem(0,1,QtGui.QTableWidgetItem("0"))
-
-        tab_ui.stats_table.setItem(1,0,QtGui.QTableWidgetItem("Failures"))
-        tab_ui.stats_table.setItem(1,1,QtGui.QTableWidgetItem("0"))
-
-        tab_ui.stats_table.setItem(2,0,QtGui.QTableWidgetItem("% Success"))
-        tab_ui.stats_table.setItem(2,1,QtGui.QTableWidgetItem(""))"""
+    def refresh_stat_display(self, tab_ui):
+        for row, key in enumerate(tab_ui.stat_dict.keys()):
+            tab_ui.stats_table.setItem(row,0, QtGui.QTableWidgetItem(key))
+            tab_ui.stats_table.setItem(row,1, QtGui.QTableWidgetItem(str(tab_ui.stat_dict[key])))
 
     def update_stats(self, result, tab_ui):
-        #TODO: Make init_stats and update_stats use a common data structure.  Probably dict.
-        stats = tab_ui.stats_table
-        num_good = int(stats.item(0,1).text())
-        num_bad = int(stats.item(1,1).text())
-        if result["Success"]:
-            # Update success and fail counts.  The math must be done with integers (of course) but table expects strings
-            num_good = int(num_good) + 1
-            stats.setItem(0, 1, QtGui.QTableWidgetItem(str(num_good)))
-        else:
-            num_bad = int(num_bad) +1
-            stats.setItem(1, 1, QtGui.QTableWidgetItem(str(num_bad)))
+        #TODO: Make init_stats and update_stats use a common data structure.  Probably dict. And clear_log
 
-        percent = round((num_good / (num_bad + num_good)) * 100, 2)
-        stats.setItem(3,1, QtGui.QTableWidgetItem(str(percent)))
+        if result["Success"]:
+            tab_ui.stat_dict["Success"] += 1
+        else:
+            tab_ui.stat_dict["Failure"] += 1
+
+        tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
+                                                                              tab_ui.stat_dict["Success"])) * 100, 2)
+        self.refresh_stat_display(tab_ui)
 
 if __name__ == '__main__':
     PingPung()
