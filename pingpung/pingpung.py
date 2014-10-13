@@ -7,6 +7,7 @@ from gettext import gettext as _
 from PyQt4 import QtCore, QtGui, uic
 
 from pplib import pping, audio
+from pplib.pptools import debug
 
 class PingThread(QtCore.QThread):
     """ A QThread subclass for running the pings.
@@ -25,12 +26,12 @@ class PingThread(QtCore.QThread):
     """
 
     def __init__(self, ip, ping_count, interval, packet_size, tab_id):
+        super(PingThread, self).__init__()
         self.ip = ip
         self.ping_count = int(ping_count)
-        self.interval = interval
-        self.packet_size = packet_size
-        self.tab_id = tab_id
-        super(PingThread, self).__init__()
+        self.interval = int(interval)
+        self.packet_size = int(packet_size)
+        self.tab_id = int(tab_id)
 
     def run(self):
         pcount = 0
@@ -38,11 +39,22 @@ class PingThread(QtCore.QThread):
             pcount += 1
             # Cannot accept sequence number > 65535.  This resets seq number but does not affect stats totals
             if pcount > 65535: pcount = 0
+            try:
+                self.result = pping.ping(self.ip, 1000, pcount, self.packet_size)
+            except ValueError:
+                self.emit(QtCore.SIGNAL('error'), "Invalid input")
+                break
+            except pping.SocketError:
+                self.emit(QtCore.SIGNAL('error'), "Socket Error.  verify that programming is running as root/admin.  See README for details.")
+                break
+            except pping.AddressError:
+                self.emit(QtCore.SIGNAL('error'), "Address error.  Check IP/domain setting.")
+                break
 
-            self.result = pping.ping(self.ip, 1000, pcount, self.packet_size)
             self.result["tabID"] = self.tab_id
             self.emit(QtCore.SIGNAL('complete'), self.result)
             time.sleep(self.interval)
+        self.emit(QtCore.SIGNAL('set_state_inactive'), {"tabID": self.tab_id})
 
 
 class PingPung(QtGui.QMainWindow):
@@ -90,7 +102,11 @@ class PingPung(QtGui.QMainWindow):
 
         # Connect enter key to start/stop ping in tab, connect start/stop button as well
         tab_ui.ip_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
+        tab_ui.session_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
+        tab_ui.ping_count_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
+        tab_ui.interval_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
         tab_ui.toggle_start.clicked.connect(lambda: self.run_button_action(tab_ui))
+        tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
 
         # Connect the clear/save log buttons to actions
         tab_ui.clear_log_button.clicked.connect(lambda: self.clear_log(tab_ui))
@@ -129,58 +145,47 @@ class PingPung(QtGui.QMainWindow):
         current = self.ui.tab_bar.currentWidget()
         return self.ui.tab_bar.indexOf(current)
 
-    """def start_ping(self, tab_ui):
-        ip = tab_ui.ip_line.text().strip()
-        ping_count = tab_ui.ping_count_line.text().strip()
-        interval = int(tab_ui.interval_line.text().strip())
-
-        # Check if running
-        try:
-            tab_ui.thread.terminate()
-        except AttributeError:
-            pass
-
-        # Initialize the thread with appropriate data, connect the slots (lalalalala) and start
-        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
-
-        self.connect_slots(tab_ui.thread)
-        tab_ui.toggle_start.setText(_("Stop"))
-
-        try:
-            tab_ui.thread.start()
-        except ValueError:
-            self.show_error("Invalid input")
-        except pping.SocketError:
-            self.show_error("Socket Error.  verify that programming is running as root/admin.  See README for details.")
-        except pping.AddressError:
-            self.show_error("Address error.  Check IP/domain setting.")"""
-
     def start_ping(self, tab_ui):
-        ip = tab_ui.ip_line.text().strip()
-        ping_count = int(tab_ui.ping_count_line.text().strip())
-        interval = int(tab_ui.interval_line.text().strip())
-
-        # TODO:  Try/catch with error gui
-        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
-        self.connect_slots(tab_ui.thread)
-        tab_ui.thread.start()
-
-        # Update GUI labels
-        tab_ui.toggle_start.setText(_("Stop"))
-
-        self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip,tab_ui.session_line.text()]))
+        self.set_active({"tabID": tab_ui.tab_id})
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
-        if hasattr(tab_ui, "thread") and hasattr(tab_ui.thread, "isRunning") and (tab_ui.thread.isRunning() is True):
-            tab_ui.thread.terminate()
-            tab_ui.toggle_start.setText(_("Start"))
-        else:
-            self.start_ping(tab_ui)
+        if not self.set_inactive({"tabID": tab_ui.tab_id}):
+           self.start_ping(tab_ui)
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
+        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self.set_inactive)
+        self.connect(sender, QtCore.SIGNAL('set_state_active'), self.set_active)
+
+    def set_inactive(self, result):
+        tab_ui = self.tabs[result["tabID"]]
+        tab_ui.toggle_start.setText(_("Start"))
+        tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
+        if hasattr(tab_ui, "thread") and hasattr(tab_ui.thread, "isRunning") and (tab_ui.thread.isRunning() is True):
+            tab_ui.thread.terminate()
+            return True
+        else:
+            return False
+
+
+    def set_active(self, result):
+        tab_ui = self.tabs[result["tabID"]]
+
+        try:
+            ip = tab_ui.ip_line.text().strip()
+            ping_count = int(tab_ui.ping_count_line.text().strip())
+            interval = int(tab_ui.interval_line.text().strip())
+        except ValueError:
+            self.show_error("Invalid input")
+
+        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        self.connect_slots(tab_ui.thread)
+        tab_ui.thread.start()
+        tab_ui.toggle_start.setText(_("Stop"))
+        tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
+        self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip,tab_ui.session_line.text()]))
 
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
