@@ -17,5 +17,3 @@ If you intend to build for Windows, you'll also need to install cx_freeze by any
     
     python setup.py build_exe
 
-
-

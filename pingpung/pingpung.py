@@ -64,7 +64,6 @@ class PingPung(QtGui.QMainWindow):
 
         self.ui = uic.loadUi('ppui/maingui.ui')
 
-
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
         # bar widget is not enough.  If a tab's index number changes while the ping thread is running, crazy
@@ -81,7 +80,6 @@ class PingPung(QtGui.QMainWindow):
         self.ui.tab_bar.tabCloseRequested.connect(self.ui.tab_bar.removeTab)
 
         # Always start with one tab
-        #self.new_tab()
         self.new_tab()
 
         self.ui.show()
