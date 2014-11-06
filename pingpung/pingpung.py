@@ -33,6 +33,7 @@ class PingThread(QtCore.QThread):
         self.interval = int(interval)
         self.packet_size = int(packet_size)
         self.tab_id = int(tab_id)
+        #TODO: icon
 
     def run(self):
         pcount = 0

@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append("pingpung")
-
+sys.path.append("pingpung/data")
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -17,7 +17,9 @@ exe_build_options = dict(path=sys.path,
                          include_files=["pingpung/data", "pingpung/ppui"],
                          icon='pingpung/data/icon.ico',
                          excludes=["tkinter"],
-                         base='Win32GUI')
+                         base='Win32GUI',
+                         executables=executables
+                         )
 
 setup(name='PingPung',
       version='0.0.4',
@@ -26,9 +28,11 @@ setup(name='PingPung',
       description='Python3/QT4 Multiplatform Ping Application',
       license="GPLv2",
       keywords="ping networking network testing",
-      packages=["pingpung"],
-      options=dict(build_exe=exe_build_options),
-      executables=executables,
+      packages=["pingpung",
+                "pingpung.pplib",
+               ],
+      options=dict(build_exe=exe_build_options,
+                   ),
       long_description=read('README.md'),
       classifiers=[
       "Development Status :: 3 - Alpha",
