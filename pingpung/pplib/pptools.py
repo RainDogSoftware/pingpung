@@ -1,6 +1,7 @@
 __author__ = 'josh'
 from functools import wraps
 
+
 def debug(func):
     @wraps(func)
     def wrapper(*args, **kwargs):

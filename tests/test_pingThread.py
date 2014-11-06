@@ -9,7 +9,7 @@ __author__ = 'josh'
 
 class TestPingThread(TestCase):
     def test_thread_object(self):
-        this_thread = pp.PingThread(1,1,1,1,1)
+        this_thread = pp.PingThread(1, 1, 1, 1, 1)
 
     def test_run(self):
         pass

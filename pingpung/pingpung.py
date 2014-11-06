@@ -9,6 +9,7 @@ from PyQt4 import QtCore, QtGui, uic
 from pplib import pping, audio
 from pplib.pptools import debug
 
+
 class PingThread(QtCore.QThread):
     """ A QThread subclass for running the pings.
 
@@ -38,17 +39,19 @@ class PingThread(QtCore.QThread):
         while (pcount < self.ping_count) or (self.ping_count == 0):
             pcount += 1
             # Cannot accept sequence number > 65535.  This resets seq number but does not affect stats totals
-            if pcount > 65535: pcount = 0
+            if pcount > 65535:
+                pcount = 0
+
             try:
                 self.result = pping.ping(self.ip, 1000, pcount, self.packet_size)
             except ValueError:
-                self.emit(QtCore.SIGNAL('error'), "Invalid input")
+                self.emit(QtCore.SIGNAL('error'), _("Invalid input"))
                 break
             except pping.SocketError:
-                self.emit(QtCore.SIGNAL('error'), "Socket Error.  verify that programming is running as root/admin.  See README for details.")
+                self.emit(QtCore.SIGNAL('error'), _("Socket Error.  verify that program is running as root/admin.  See README for details."))
                 break
             except pping.AddressError:
-                self.emit(QtCore.SIGNAL('error'), "Address error.  Check IP/domain setting.")
+                self.emit(QtCore.SIGNAL('error'), _("Address error.  Check IP/domain setting."))
                 break
 
             self.result["tabID"] = self.tab_id
@@ -73,10 +76,10 @@ class PingPung(QtGui.QMainWindow):
         self.counter_iter = count()
 
         # Functionality for adding and removing tabs
-        self.tabButton = QtGui.QToolButton(self)
-        self.tabButton.setText('+')
-        self.ui.tab_bar.setCornerWidget(self.tabButton)
-        self.tabButton.clicked.connect(self.new_tab)
+        self.tab_button = QtGui.QToolButton(self)
+        self.tab_button.setText('+')
+        self.ui.tab_bar.setCornerWidget(self.tab_button)
+        self.tab_button.clicked.connect(self.new_tab)
         self.ui.tab_bar.tabCloseRequested.connect(self.ui.tab_bar.removeTab)
 
         # Always start with one tab
@@ -112,14 +115,15 @@ class PingPung(QtGui.QMainWindow):
 
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
 
-    def get_default_stats(self):
-        return OrderedDict([("Success",0),
-                                ("Failure", 0),
-                                ("", ""),
-                                ("% Success", 0),
-                                ("Highest Latency", "NI"),
-                                ("Lowest Latency", "NI"),
-        ])
+    @staticmethod
+    def get_default_stats():
+        return OrderedDict([("Success", 0),
+                            ("Failure", 0),
+                            ("", ""),
+                            ("% Success", 0),
+                            ("Highest Latency", ""),
+                            ("Lowest Latency", ""),
+                           ])
 
     def clear_log(self, tab_ui):
         tab_ui.output_textedit.clear()
@@ -129,7 +133,7 @@ class PingPung(QtGui.QMainWindow):
     def save_log(self, tab_ui):
         file_types = "Plain Text (*.txt);;Plain Text (*.log)"
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
-        if len(filename) > 0: # Making sure the user selected a file (didn't hit Cancel)
+        if len(filename) > 0:  # Making sure the user selected a file (didn't hit Cancel)
             file_handle = open(filename, 'w')
             try:
                 file_handle.write(tab_ui.output_textedit.toPlainText())
@@ -144,18 +148,18 @@ class PingPung(QtGui.QMainWindow):
         return self.ui.tab_bar.indexOf(current)
 
     def start_ping(self, tab_ui):
-        self.set_active({"tabID": tab_ui.tab_id})
+        self._set_active({"tabID": tab_ui.tab_id})
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
         if not self.set_inactive({"tabID": tab_ui.tab_id}):
-           self.start_ping(tab_ui)
+            self.start_ping(tab_ui)
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
         self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self.set_inactive)
-        self.connect(sender, QtCore.SIGNAL('set_state_active'), self.set_active)
+        self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
 
     def set_inactive(self, result):
         tab_ui = self.tabs[result["tabID"]]
@@ -167,8 +171,7 @@ class PingPung(QtGui.QMainWindow):
         else:
             return False
 
-
-    def set_active(self, result):
+    def _set_active(self, result):
         tab_ui = self.tabs[result["tabID"]]
 
         try:
@@ -177,13 +180,14 @@ class PingPung(QtGui.QMainWindow):
             interval = int(tab_ui.interval_line.text().strip())
         except ValueError:
             self.show_error("Invalid input")
+            return
 
         tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
         self.connect_slots(tab_ui.thread)
         tab_ui.thread.start()
         tab_ui.toggle_start.setText(_("Stop"))
         tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
-        self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip,tab_ui.session_line.text()]))
+        self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip, tab_ui.session_line.text()]))
 
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
@@ -192,39 +196,55 @@ class PingPung(QtGui.QMainWindow):
 
         if result["Success"]:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
-            output = "%s %i - %s - %i bytes from %s  time=%i ms \n" % (result["Timestamp"], result['SeqNumber'],
-                                                                       result['Message'], result["PacketSize"],
-                                                                       result['Responder'], result['Delay'])
+            output = "%s %i - %s - %i bytes from %s  time=%f ms" % (result["Timestamp"], result['SeqNumber'],
+                                                                    result['Message'], result["PacketSize"],
+                                                                    result['Responder'], round(result['Delay'], 2))
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
                 audio.play("data/woohoo.wav")
         else:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
-            output = "%s %i - %s \n" % (result["Timestamp"], result['SeqNumber'], result['Message'])
+            output = "%s %i - %s" % (result["Timestamp"], result['SeqNumber'], result['Message'])
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_failure.isChecked():
                 audio.play("data/doh.wav")
 
         # Move cursor to end, append text, move to end again.  Because reasons.
         output_box = tab_ui.output_textedit
-        output_box.moveCursor(QtGui.QTextCursor.End)
-        output_box.insertPlainText(_(output))
-        output_box.moveCursor(QtGui.QTextCursor.End)
+        #output_box.moveCursor(QtGui.QTextCursor.End)
+        #output_box.insertPlainText(_(output))
+        #output_box.moveCursor(QtGui.QTextCursor.End)
+        output_box.append(_(output))
 
         self.update_stats(result, tab_ui)
 
     def show_error(self, message):
         QtGui.QMessageBox.about(self, "I'm sad now.", _(message))
 
-
     def refresh_stat_display(self, tab_ui):
         for row, key in enumerate(tab_ui.stat_dict.keys()):
-            tab_ui.stats_table.setItem(row,0, QtGui.QTableWidgetItem(key))
-            tab_ui.stats_table.setItem(row,1, QtGui.QTableWidgetItem(str(tab_ui.stat_dict[key])))
+            tab_ui.stats_table.setItem(row, 0, QtGui.QTableWidgetItem(key))
+            tab_ui.stats_table.setItem(row, 1, QtGui.QTableWidgetItem(str(tab_ui.stat_dict[key])))
 
     def update_stats(self, result, tab_ui):
-        #TODO: Make init_stats and update_stats use a common data structure.  Probably dict. And clear_log
-
         if result["Success"]:
             tab_ui.stat_dict["Success"] += 1
+            # This is sloppy,
+            # TODO: come back and clean this up.
+            high = tab_ui.stat_dict["Highest Latency"]
+            low = tab_ui.stat_dict["Lowest Latency"]
+            delay = round(result["Delay"], 2)
+
+            if high == "":
+                tab_ui.stat_dict["Highest Latency"] = delay
+                high = result["Delay"]
+
+            if low == "":
+                tab_ui.stat_dict["Lowest Latency"] = delay
+                low = result["Delay"]
+
+            if result["Delay"] > high:
+                tab_ui.stat_dict["Highest Latency"] = delay
+            elif result["Delay"] < low:
+                tab_ui.stat_dict["Lowest Latency"] = delay
         else:
             tab_ui.stat_dict["Failure"] += 1
 

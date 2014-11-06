@@ -16,36 +16,8 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="4" column="4">
-      <widget class="QPushButton" name="clear_log_button">
-       <property name="text">
-        <string>Clear Log</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="session_line"/>
-     </item>
-     <item row="1" column="3">
-      <widget class="QLineEdit" name="interval_line">
-       <property name="text">
-        <string>1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLineEdit" name="ping_count_line">
-       <property name="text">
-        <string>0</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLineEdit" name="ip_line">
-       <property name="text">
-        <string>127.0.0.1</string>
-       </property>
-      </widget>
+     <item row="2" column="0" rowspan="4" colspan="4">
+      <widget class="QTextEdit" name="output_textedit"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="ip_line_label">
@@ -72,13 +44,6 @@
       <widget class="QLabel" name="label_3">
        <property name="text">
         <string>Interval</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="5">
-      <widget class="QPushButton" name="save_log_button">
-       <property name="text">
-        <string>Save Log</string>
        </property>
       </widget>
      </item>
@@ -154,10 +119,10 @@
        </item>
       </widget>
      </item>
-     <item row="3" column="4" colspan="2">
-      <widget class="QGroupBox" name="groupBox">
+     <item row="4" column="4" colspan="2">
+      <widget class="QGroupBox" name="audio_options">
        <property name="title">
-        <string>GroupBox</string>
+        <string>Audio Options</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
@@ -200,8 +165,43 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0" rowspan="3" colspan="4">
-      <widget class="QTextEdit" name="output_textedit"/>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="session_line"/>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLineEdit" name="interval_line">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="ping_count_line">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLineEdit" name="ip_line">
+       <property name="text">
+        <string>127.0.0.1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QPushButton" name="clear_log_button">
+       <property name="text">
+        <string>Clear Log</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QPushButton" name="save_log_button">
+       <property name="text">
+        <string>Save Log</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
