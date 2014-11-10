@@ -26,30 +26,31 @@ class PingThread(QtCore.QThread):
     as provided by the ping library in use.
     """
 
-    def __init__(self, ip, ping_count, interval, packet_size, tab_id):
+    def __init__(self, ip, ping_count, interval, packet_size, tab_id, start_num):
         super(PingThread, self).__init__()
         self.ip = ip
         self.ping_count = int(ping_count)
         self.interval = int(interval)
         self.packet_size = int(packet_size)
         self.tab_id = int(tab_id)
-        #TODO: icon
+        self.start_num = start_num
+
 
     def run(self):
-        pcount = 0
-        while (pcount < self.ping_count) or (self.ping_count == 0):
-            pcount += 1
+        seq_num = self.start_num
+        while (seq_num < self.ping_count) or (self.ping_count == 0):
+            seq_num += 1
             # Cannot accept sequence number > 65535.  This resets seq number but does not affect stats totals
-            if pcount > 65535:
-                pcount = 0
+            if seq_num > 65535:
+                seq_num = 0
 
             try:
-                self.result = pping.ping(self.ip, 1000, pcount, self.packet_size)
+                self.result = pping.ping(self.ip, 5000, seq_num, self.packet_size)
             except ValueError:
                 self.emit(QtCore.SIGNAL('error'), _("Invalid input"))
                 break
             except pping.SocketError:
-                self.emit(QtCore.SIGNAL('error'), _("Socket Error.  verify that program is running as root/admin.  See README for details."))
+                self.emit(QtCore.SIGNAL('error'), _("Socket Error.  Check ip/domain and be certain app is running as root/admin"))
                 break
             except pping.AddressError:
                 self.emit(QtCore.SIGNAL('error'), _("Address error.  Check IP/domain setting."))
@@ -58,7 +59,7 @@ class PingThread(QtCore.QThread):
             self.result["tabID"] = self.tab_id
             self.emit(QtCore.SIGNAL('complete'), self.result)
             time.sleep(self.interval)
-        self.emit(QtCore.SIGNAL('set_state_inactive'), {"tabID": self.tab_id})
+        self.emit(QtCore.SIGNAL('suite_complete'), {"tabID": self.tab_id})
 
 
 class PingPung(QtGui.QMainWindow):
@@ -67,6 +68,7 @@ class PingPung(QtGui.QMainWindow):
         super(PingPung, self).__init__()
 
         self.ui = uic.loadUi('ppui/maingui.ui')
+        #TODO: icon
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
@@ -94,6 +96,7 @@ class PingPung(QtGui.QMainWindow):
         # As noted in __init__, tabs must have an unchanging ID number for thread support
         tab_ui = uic.loadUi('ppui/pptab.ui')
         tab_ui.tab_id = next(self.counter_iter)
+        tab_ui.last_num = -1
 
         # We keep an OrderedDict of the ping statistics for each tab.  This is used directly by the stats table
         tab_ui.stat_dict = self.get_default_stats()
@@ -129,6 +132,7 @@ class PingPung(QtGui.QMainWindow):
     def clear_log(self, tab_ui):
         tab_ui.output_textedit.clear()
         tab_ui.stat_dict = self.get_default_stats()
+        tab_ui.last_num = -1
         self.refresh_stat_display(tab_ui)
 
     def save_log(self, tab_ui):
@@ -153,16 +157,23 @@ class PingPung(QtGui.QMainWindow):
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
-        if not self.set_inactive({"tabID": tab_ui.tab_id}):
+        if not self._set_inactive({"tabID": tab_ui.tab_id}):
             self.start_ping(tab_ui)
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self.set_inactive)
+        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self._set_inactive)
         self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
+        self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
 
-    def set_inactive(self, result):
+    def _suite_complete(self, result):
+        tab_ui = self.tabs[result["tabID"]]
+        tab_ui.output_textedit.append(_("Test Suite Complete"))
+        tab_ui.last_num = -1
+        self._set_inactive(result)
+
+    def _set_inactive(self, result):
         tab_ui = self.tabs[result["tabID"]]
         tab_ui.toggle_start.setText(_("Start"))
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
@@ -172,22 +183,33 @@ class PingPung(QtGui.QMainWindow):
         else:
             return False
 
+    @debug
     def _set_active(self, result):
         tab_ui = self.tabs[result["tabID"]]
 
         try:
             ip = tab_ui.ip_line.text().strip()
+
             ping_count = int(tab_ui.ping_count_line.text().strip())
             interval = int(tab_ui.interval_line.text().strip())
         except ValueError:
             self.show_error("Invalid input")
             return
 
-        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id)
+        if tab_ui.last_num > 0:
+            seq_num = tab_ui.last_num
+        else:
+            seq_num = 0
+
+        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id, seq_num)
         self.connect_slots(tab_ui.thread)
         tab_ui.thread.start()
-        tab_ui.toggle_start.setText(_("Stop"))
+        tab_ui.toggle_start.setText(_("Pause"))
         tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
+
+        #index = self.ui.tab_bar.indexOf(tab_ui)
+        tab_ui.setStyleSheet('QTabBar::tab {background-color: red;}')
+
         self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip, tab_ui.session_line.text()]))
 
     def show_result(self, result):
@@ -197,25 +219,33 @@ class PingPung(QtGui.QMainWindow):
 
         if result["Success"]:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
-            output = "%s %i - %s - %i bytes from %s  time=%f ms" % (result["Timestamp"], result['SeqNumber'],
-                                                                    result['Message'], result["PacketSize"],
-                                                                    result['Responder'], round(result['Delay'], 2))
+            output = self.format_output_success(result)
+            tab_ui.last_num = result["SeqNumber"]
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
                 audio.play("data/woohoo.wav")
         else:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
-            output = "%s %i - %s" % (result["Timestamp"], result['SeqNumber'], result['Message'])
+            output = self.format_output_failure(result)
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_failure.isChecked():
                 audio.play("data/doh.wav")
 
-        # Move cursor to end, append text, move to end again.  Because reasons.
         output_box = tab_ui.output_textedit
-        #output_box.moveCursor(QtGui.QTextCursor.End)
-        #output_box.insertPlainText(_(output))
-        #output_box.moveCursor(QtGui.QTextCursor.End)
         output_box.append(_(output))
+        self.last_num = result["SeqNumber"]
 
         self.update_stats(result, tab_ui)
+
+    @staticmethod
+    def format_output_success(result):
+        output = "{:s} {:d} - {:s} - {:d} bytes from {:s}  time={:.2f} ms".format(result["Timestamp"], result['SeqNumber'],
+                                                                result['Message'], result["PacketSize"],
+                                                                result['Responder'], round(result['Delay'], 2))
+        return output
+
+    @staticmethod
+    def format_output_failure(result):
+        output = "{:s} {:d} - {:s}".format(result["Timestamp"], result['SeqNumber'], result['Message'])
+        return output
 
     def show_error(self, message):
         QtGui.QMessageBox.about(self, "I'm sad now.", _(message))
