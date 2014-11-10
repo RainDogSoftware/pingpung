@@ -242,14 +242,23 @@ class PingPung(QtGui.QMainWindow):
 
     @staticmethod
     def format_output_success(result):
-        output = "{:s} {:d} - {:s} - {:d} bytes from {:s}  time={:.2f} ms".format(result["Timestamp"], result['SeqNumber'],
+        delay = result["Delay"]
+        if delay > 100:
+            color = "red"
+        elif delay > 50:
+            color = "#FF9900"
+        else:
+            color = "green"
+
+        ms = "<font color='{:s}'>{:.2f}</font>".format(color, delay)
+        output = "{:s} {:d} - {:s} - {:d} bytes from {:s}  time={:s} ms".format(result["Timestamp"], result['SeqNumber'],
                                                                 result['Message'], result["PacketSize"],
-                                                                result['Responder'], round(result['Delay'], 2))
+                                                                result['Responder'], ms)
         return output
 
     @staticmethod
     def format_output_failure(result):
-        output = "{:s} {:d} - {:s}".format(result["Timestamp"], result['SeqNumber'], result['Message'])
+        output = "<font color='red'>{:s} - {:s}</font>".format(result["Timestamp"], result['Message'])
         return output
 
     def show_error(self, message):
