@@ -69,7 +69,7 @@ class PingPung(QtGui.QMainWindow):
 
         self.ui = uic.loadUi('ppui/maingui.ui')
         #TODO: icon
-
+        self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
         # bar widget is not enough.  If a tab's index number changes while the ping thread is running, crazy
@@ -177,6 +177,8 @@ class PingPung(QtGui.QMainWindow):
         tab_ui = self.tabs[result["tabID"]]
         tab_ui.toggle_start.setText(_("Start"))
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
+        index = self.ui.tab_bar.indexOf(tab_ui)
+        self.ui.tab_bar.setTabIcon(index, QtGui.QIcon(""))
         if hasattr(tab_ui, "thread") and hasattr(tab_ui.thread, "isRunning") and (tab_ui.thread.isRunning() is True):
             tab_ui.thread.terminate()
             return True
@@ -186,6 +188,7 @@ class PingPung(QtGui.QMainWindow):
     @debug
     def _set_active(self, result):
         tab_ui = self.tabs[result["tabID"]]
+        self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
 
         try:
             ip = tab_ui.ip_line.text().strip()
@@ -207,10 +210,12 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.toggle_start.setText(_("Pause"))
         tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
 
-        #index = self.ui.tab_bar.indexOf(tab_ui)
-        tab_ui.setStyleSheet('QTabBar::tab {background-color: red;}')
+        index = self.ui.tab_bar.indexOf(tab_ui)
+        self.ui.tab_bar.setTabIcon(index, QtGui.QIcon("data/play.ico"))
 
+        tab_ui.setStyleSheet('QTabBar::tab {background-color: red;}')
         self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip, tab_ui.session_line.text()]))
+
 
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
