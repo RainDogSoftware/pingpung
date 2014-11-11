@@ -60,7 +60,7 @@ class PingThread(QtCore.QThread):
             self.result["tabID"] = self.tab_id
             self.emit(QtCore.SIGNAL('complete'), self.result)
             time.sleep(self.interval)
-        self.emit(QtCore.SIGNAL('suite_complete'), {"tabID": self.tab_id})
+        self.emit(QtCore.SIGNAL('suite_complete'), self.tab_id)
 
 ############################################################################################
 # Main
@@ -189,11 +189,13 @@ class PingPung(QtGui.QMainWindow):
     ############################################################################################
     # Ping Management
 
-    def _suite_complete(self, result):
-        tab_ui = self.tabs[result["tabID"]]
+    def _suite_complete(self, id):
+        # Fetch the tab that matches the ID of the resulting packet (NOT index number), write output, clear the
+        # last_num setting so sequence will start from 0 on next suite start
+        tab_ui = self.tabs[id]
         tab_ui.output_textedit.append(_("Test Suite Complete"))
         tab_ui.last_num = -1
-        self._set_inactive(result["tabID"])
+        self._set_inactive(id)
 
     def _set_inactive(self, id):
         tab_ui = self.tabs[id]
