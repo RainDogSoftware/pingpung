@@ -9,7 +9,8 @@ from PyQt4 import QtCore, QtGui, uic
 from pplib import pping, audio
 from pplib.pptools import debug
 
-
+############################################################################################
+# Ping Thread
 class PingThread(QtCore.QThread):
     """ A QThread subclass for running the pings.
 
@@ -61,15 +62,17 @@ class PingThread(QtCore.QThread):
             time.sleep(self.interval)
         self.emit(QtCore.SIGNAL('suite_complete'), {"tabID": self.tab_id})
 
-
+############################################################################################
+# Main
 class PingPung(QtGui.QMainWindow):
+    ############################################################################################
+    # UI Setup
     def __init__(self):
         app = QtGui.QApplication(sys.argv)
         super(PingPung, self).__init__()
-
         self.ui = uic.loadUi('ppui/maingui.ui')
         #TODO: icon
-        self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
+        #self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
         # bar widget is not enough.  If a tab's index number changes while the ping thread is running, crazy
@@ -85,11 +88,36 @@ class PingPung(QtGui.QMainWindow):
         self.tab_button.clicked.connect(self.new_tab)
         self.ui.tab_bar.tabCloseRequested.connect(self.ui.tab_bar.removeTab)
 
+        # Menu actions
+        self.ui.actionExit.triggered.connect(QtGui.qApp.quit)
+        self.ui.actionAbout_PingPung.triggered.connect(self.show_about)
+
         # Always start with one tab
         self.new_tab()
 
         self.ui.show()
         sys.exit(app.exec_())
+
+    def show_about(self):
+        #TODO:  Figure out why this window just flashes up briefly
+        about = uic.loadUi("ppui/about.ui")
+        about.show()
+
+    def run_button_action(self, tab_ui):
+        #if this tab contains a running thread, terminate it
+        if not self._set_inactive(tab_ui.tab_id):
+            self._set_active(tab_ui.tab_id)
+
+    def connect_slots(self, sender):
+        self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
+        self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
+        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self._set_inactive)
+        self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
+        self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
+
+
+    ############################################################################################
+    # Tab management
 
     def new_tab(self, *args):
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
@@ -118,6 +146,17 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.save_log_button.clicked.connect(lambda: self.save_log(tab_ui))
 
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
+
+    def current_index(self):
+        current = self.ui.tab_bar.currentWidget()
+        return self.ui.tab_bar.indexOf(current)
+
+    def get_index(self, tab_ui):
+        return self.ui.tab_bar.indexOf(tab_ui)
+
+
+    ############################################################################################
+    # Stats & Data
 
     @staticmethod
     def get_default_stats():
@@ -148,36 +187,20 @@ class PingPung(QtGui.QMainWindow):
                 # it all has the same effect.  Notify the user and move along.
                 self.show_error("Unable to save log file")
 
-    def current_index(self):
-        current = self.ui.tab_bar.currentWidget()
-        return self.ui.tab_bar.indexOf(current)
-
-    def start_ping(self, tab_ui):
-        self._set_active({"tabID": tab_ui.tab_id})
-
-    def run_button_action(self, tab_ui):
-        #if this tab contains a running thread, terminate it
-        if not self._set_inactive({"tabID": tab_ui.tab_id}):
-            self.start_ping(tab_ui)
-
-    def connect_slots(self, sender):
-        self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
-        self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self._set_inactive)
-        self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
-        self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
+    ############################################################################################
+    # Ping Management
 
     def _suite_complete(self, result):
         tab_ui = self.tabs[result["tabID"]]
         tab_ui.output_textedit.append(_("Test Suite Complete"))
         tab_ui.last_num = -1
-        self._set_inactive(result)
+        self._set_inactive(result["tabID"])
 
-    def _set_inactive(self, result):
-        tab_ui = self.tabs[result["tabID"]]
+    def _set_inactive(self, id):
+        tab_ui = self.tabs[id]
         tab_ui.toggle_start.setText(_("Start"))
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
-        index = self.ui.tab_bar.indexOf(tab_ui)
+        index = self.get_index(tab_ui)
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon(""))
         if hasattr(tab_ui, "thread") and hasattr(tab_ui.thread, "isRunning") and (tab_ui.thread.isRunning() is True):
             tab_ui.thread.terminate()
@@ -185,9 +208,8 @@ class PingPung(QtGui.QMainWindow):
         else:
             return False
 
-    @debug
-    def _set_active(self, result):
-        tab_ui = self.tabs[result["tabID"]]
+    def _set_active(self, id):
+        tab_ui = self.tabs[id]
         self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
 
         try:
@@ -210,7 +232,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.toggle_start.setText(_("Pause"))
         tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
 
-        index = self.ui.tab_bar.indexOf(tab_ui)
+        index = self.get_index(tab_ui)
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon("data/play.ico"))
 
         tab_ui.setStyleSheet('QTabBar::tab {background-color: red;}')
@@ -220,7 +242,7 @@ class PingPung(QtGui.QMainWindow):
     def show_result(self, result):
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
-        index = self.ui.tab_bar.indexOf(tab_ui)
+        index = self.get_index(tab_ui)
 
         if result["Success"]:
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
