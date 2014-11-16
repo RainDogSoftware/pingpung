@@ -157,6 +157,59 @@ class PingPung(QtGui.QMainWindow):
     ############################################################################################
     # Stats & Data
 
+    def clear_log(self, tab_ui):
+        """
+        Clear the main output window, stat data dict, reset ping sequence number,  reset stats display table
+        :param tab_ui: the tab instance to work on
+        :return: None
+        """
+        tab_ui.output_textedit.clear()
+        tab_ui.stat_dict = self.get_default_stats()
+        tab_ui.last_num = -1
+        self.refresh_stat_display(tab_ui)
+
+    def save_log(self, tab_ui):
+        """
+        Save the contents of the main output box to a plain text file of the user's choosing
+        :param tab_ui: the tab instance to work on
+        :return: None
+        """
+        file_types = "Plain Text (*.txt);;Plain Text (*.log)"
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
+        if len(filename) > 0:  # Making sure the user selected a file (didn't hit Cancel)
+            file_handle = open(filename, 'w')
+            try:
+                raise IndexError
+                file_handle.write(tab_ui.output_textedit.toPlainText())
+                file_handle.close()
+            except Exception as e:
+                # I don't normally do blanket exceptions, but in this case any error means we can't save file so
+                # it all has the same effect.  Notify the user and move along.
+                self.show_error("Unable to save log file.", e)
+
+    def show_result(self, result):
+        # The ID number of the tab which sent the ping is provided by the PingThread class
+        tab_ui = self.tabs[result["tabID"]]
+        index = self.get_index(tab_ui)
+
+        if result["Success"]:
+            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
+            output = self.format_output_success(result)
+            tab_ui.last_num = result["SeqNumber"]
+            if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
+                audio.play("data/woohoo.wav")
+        else:
+            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
+            output = self.format_output_failure(result)
+            if tab_ui.toggle_audio.isChecked() and tab_ui.alert_failure.isChecked():
+                audio.play("data/doh.wav")
+
+        output_box = tab_ui.output_textedit
+        output_box.append(_(output))
+        self.last_num = result["SeqNumber"]
+
+        self.update_stats(result, tab_ui)
+
     @staticmethod
     def get_default_stats():
         return OrderedDict([("Success", 0),
@@ -167,24 +220,62 @@ class PingPung(QtGui.QMainWindow):
                             ("Lowest Latency", ""),
                            ])
 
-    def clear_log(self, tab_ui):
-        tab_ui.output_textedit.clear()
-        tab_ui.stat_dict = self.get_default_stats()
-        tab_ui.last_num = -1
-        self.refresh_stat_display(tab_ui)
+    @staticmethod
+    def format_output_success(result):
+        delay = result["Delay"]
+        if delay > 100:
+            color = "red"
+        elif delay > 50:
+            color = "#FF9900"
+        else:
+            color = "green"
 
-    def save_log(self, tab_ui):
-        file_types = "Plain Text (*.txt);;Plain Text (*.log)"
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
-        if len(filename) > 0:  # Making sure the user selected a file (didn't hit Cancel)
-            file_handle = open(filename, 'w')
-            try:
-                file_handle.write(tab_ui.output_textedit.toPlainText())
-                file_handle.close()
-            except Exception as e:
-                # I don't normally do blanket exceptions, but in this case any error means we can't save file so
-                # it all has the same effect.  Notify the user and move along.
-                self.show_error("Unable to save log file")
+        ms = "<font color='{:s}'>{:.2f}</font>".format(color, delay)
+        output = "{:s} {:d} - {:s} - {:d} bytes from {:s}  time={:s} ms".format(result["Timestamp"], result['SeqNumber'],
+                                                                result['Message'], result["PacketSize"],
+                                                                result['Responder'], ms)
+        return output
+
+    @staticmethod
+    def format_output_failure(result):
+        output = "<font color='red'>{:s} - {:s}</font>".format(result["Timestamp"], result['Message'])
+        return output
+
+    def show_error(self, message, optional=""):
+        QtGui.QMessageBox.about(self, "I'm sad now.", "\n".join([_(message), str(optional)]))
+
+    def refresh_stat_display(self, tab_ui):
+        for row, key in enumerate(tab_ui.stat_dict.keys()):
+            tab_ui.stats_table.setItem(row, 0, QtGui.QTableWidgetItem(key))
+            tab_ui.stats_table.setItem(row, 1, QtGui.QTableWidgetItem(str(tab_ui.stat_dict[key])))
+
+    def update_stats(self, result, tab_ui):
+        if result["Success"]:
+            tab_ui.stat_dict["Success"] += 1
+            # This is sloppy,
+            # TODO: come back and clean this up.
+            high = tab_ui.stat_dict["Highest Latency"]
+            low = tab_ui.stat_dict["Lowest Latency"]
+            delay = round(result["Delay"], 2)
+
+            if high == "":
+                tab_ui.stat_dict["Highest Latency"] = delay
+                high = result["Delay"]
+
+            if low == "":
+                tab_ui.stat_dict["Lowest Latency"] = delay
+                low = result["Delay"]
+
+            if result["Delay"] > high:
+                tab_ui.stat_dict["Highest Latency"] = delay
+            elif result["Delay"] < low:
+                tab_ui.stat_dict["Lowest Latency"] = delay
+        else:
+            tab_ui.stat_dict["Failure"] += 1
+
+        tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
+                                                                              tab_ui.stat_dict["Success"])) * 100, 2)
+        self.refresh_stat_display(tab_ui)
 
     ############################################################################################
     # Ping Management
@@ -229,6 +320,7 @@ class PingPung(QtGui.QMainWindow):
 
         tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id, seq_num)
         self.connect_slots(tab_ui.thread)
+        # Not in a try/except block because the thread does its own error checking and reports via signals
         tab_ui.thread.start()
         tab_ui.toggle_start.setText(_("Pause"))
         tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
@@ -237,88 +329,14 @@ class PingPung(QtGui.QMainWindow):
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon("data/play.ico"))
 
         tab_ui.setStyleSheet('QTabBar::tab {background-color: red;}')
-        self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip, tab_ui.session_line.text()]))
-
-
-    def show_result(self, result):
-        # The ID number of the tab which sent the ping is provided by the PingThread class
-        tab_ui = self.tabs[result["tabID"]]
-        index = self.get_index(tab_ui)
-
-        if result["Success"]:
-            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
-            output = self.format_output_success(result)
-            tab_ui.last_num = result["SeqNumber"]
-            if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
-                audio.play("data/woohoo.wav")
+        label = tab_ui.session_line.test()
+        if len(label) < 1:
+            self.ui.tab_bar.setTabText(self.current_index(), ip)
         else:
-            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
-            output = self.format_output_failure(result)
-            if tab_ui.toggle_audio.isChecked() and tab_ui.alert_failure.isChecked():
-                audio.play("data/doh.wav")
+            self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip, tab_ui.session_line.text()]))
 
-        output_box = tab_ui.output_textedit
-        output_box.append(_(output))
-        self.last_num = result["SeqNumber"]
 
-        self.update_stats(result, tab_ui)
 
-    @staticmethod
-    def format_output_success(result):
-        delay = result["Delay"]
-        if delay > 100:
-            color = "red"
-        elif delay > 50:
-            color = "#FF9900"
-        else:
-            color = "green"
-
-        ms = "<font color='{:s}'>{:.2f}</font>".format(color, delay)
-        output = "{:s} {:d} - {:s} - {:d} bytes from {:s}  time={:s} ms".format(result["Timestamp"], result['SeqNumber'],
-                                                                result['Message'], result["PacketSize"],
-                                                                result['Responder'], ms)
-        return output
-
-    @staticmethod
-    def format_output_failure(result):
-        output = "<font color='red'>{:s} - {:s}</font>".format(result["Timestamp"], result['Message'])
-        return output
-
-    def show_error(self, message):
-        QtGui.QMessageBox.about(self, "I'm sad now.", _(message))
-
-    def refresh_stat_display(self, tab_ui):
-        for row, key in enumerate(tab_ui.stat_dict.keys()):
-            tab_ui.stats_table.setItem(row, 0, QtGui.QTableWidgetItem(key))
-            tab_ui.stats_table.setItem(row, 1, QtGui.QTableWidgetItem(str(tab_ui.stat_dict[key])))
-
-    def update_stats(self, result, tab_ui):
-        if result["Success"]:
-            tab_ui.stat_dict["Success"] += 1
-            # This is sloppy,
-            # TODO: come back and clean this up.
-            high = tab_ui.stat_dict["Highest Latency"]
-            low = tab_ui.stat_dict["Lowest Latency"]
-            delay = round(result["Delay"], 2)
-
-            if high == "":
-                tab_ui.stat_dict["Highest Latency"] = delay
-                high = result["Delay"]
-
-            if low == "":
-                tab_ui.stat_dict["Lowest Latency"] = delay
-                low = result["Delay"]
-
-            if result["Delay"] > high:
-                tab_ui.stat_dict["Highest Latency"] = delay
-            elif result["Delay"] < low:
-                tab_ui.stat_dict["Lowest Latency"] = delay
-        else:
-            tab_ui.stat_dict["Failure"] += 1
-
-        tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
-                                                                              tab_ui.stat_dict["Success"])) * 100, 2)
-        self.refresh_stat_display(tab_ui)
 
 if __name__ == '__main__':
     PingPung()
