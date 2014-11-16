@@ -289,6 +289,11 @@ class PingPung(QtGui.QMainWindow):
         self._set_inactive(id)
 
     def _set_inactive(self, id):
+        """
+        Sets the tab to the inactive state, including gui changes and terminating the thread
+        :param id: the id number of the tab to set as inactive
+        :return: None
+        """
         tab_ui = self.tabs[id]
         tab_ui.toggle_start.setText(_("Start"))
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
@@ -301,18 +306,26 @@ class PingPung(QtGui.QMainWindow):
             return False
 
     def _set_active(self, id):
+        """
+        Sets the tab to active state, including gui changes and starting the ping thread
+        :param id: the id number of the tab to set as active
+        :return: None
+        """
         tab_ui = self.tabs[id]
-        self.setWindowIcon(QtGui.QIcon("data/icon.ico"))
+        index = self.get_index(tab_ui)
+        # Default to black text (in case tab text is colored from previous session)
+        self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 0, 0))
 
         try:
             ip = tab_ui.ip_line.text().strip()
-
             ping_count = int(tab_ui.ping_count_line.text().strip())
             interval = int(tab_ui.interval_line.text().strip())
+            label = tab_ui.session_line.text().strip()
         except ValueError:
             self.show_error("Invalid input")
             return
-
+        # We treat start/stop as start/pause, and a new session is indicated by a -1 sequence number
+        # If positive, pick up from that sequence number
         if tab_ui.last_num > 0:
             seq_num = tab_ui.last_num
         else:
@@ -322,21 +335,16 @@ class PingPung(QtGui.QMainWindow):
         self.connect_slots(tab_ui.thread)
         # Not in a try/except block because the thread does its own error checking and reports via signals
         tab_ui.thread.start()
+
         tab_ui.toggle_start.setText(_("Pause"))
         tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
-
-        index = self.get_index(tab_ui)
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon("data/play.ico"))
 
-        tab_ui.setStyleSheet('QTabBar::tab {background-color: red;}')
-        label = tab_ui.session_line.test()
+        # No sense placing a hyphen if there's nothing on the other side
         if len(label) < 1:
-            self.ui.tab_bar.setTabText(self.current_index(), ip)
+            self.ui.tab_bar.setTabText(index, ip)
         else:
-            self.ui.tab_bar.setTabText(self.current_index(), " - ".join([ip, tab_ui.session_line.text()]))
-
-
-
+            self.ui.tab_bar.setTabText(index, " - ".join([ip, label]))
 
 if __name__ == '__main__':
     PingPung()
