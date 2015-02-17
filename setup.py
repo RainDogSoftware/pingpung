@@ -18,7 +18,7 @@ exe_build_options = dict(path=sys.path,
                          icon='pingpung/data/icon.ico',
                          excludes=["tkinter"],
                          base='Win32GUI',
-                         executables=executables
+
                          )
 
 setup(name='PingPung',
@@ -34,6 +34,7 @@ setup(name='PingPung',
       options=dict(build_exe=exe_build_options,
                    ),
       long_description=read('README.md'),
+      executables=executables,
       classifiers=[
       "Development Status :: 3 - Alpha",
       "Topic :: Utilities",

@@ -331,7 +331,7 @@ def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     )
   
     packet = header + data
-  
+    print(len(packet))
     send_time = time.time()
   
     try:

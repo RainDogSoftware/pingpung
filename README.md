@@ -8,7 +8,7 @@ If you're uncomfortable with that, there are many other platform-specific graphi
 require root (because they're just wrappers around the OS's existing ping util).   
   
 ### A note about dependencies
-This application uses PyQt4 as the graphics library.  This package is not installable via PyPI and will need to be done
+This application uses PyQt4 as the graphical library.  This package is not installable via PyPI and will need to be done
 separately.  On Debian/Ubuntu, for example, it's as simple as
 
     sudo apt-get install python3-pyqt4

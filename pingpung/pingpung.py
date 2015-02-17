@@ -98,7 +98,6 @@ class PingPung(QtGui.QMainWindow):
         sys.exit(app.exec_())
 
     def show_about(self):
-        #TODO:  Figure out why this window just flashes up briefly
         self.about = uic.loadUi("ppui/about.ui")
         self.about.show()
 
@@ -144,6 +143,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.clear_log_button.clicked.connect(lambda: self.clear_log(tab_ui))
         tab_ui.save_log_button.clicked.connect(lambda: self.save_log(tab_ui))
 
+        # Always start with one tab
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
         self.ui.tab_bar.setCurrentWidget(tab_ui)
 
@@ -322,6 +322,9 @@ class PingPung(QtGui.QMainWindow):
             ping_count = int(tab_ui.ping_count_line.text().strip())
             interval = int(tab_ui.interval_line.text().strip())
             label = tab_ui.session_line.text().strip()
+            packet_size = int(tab_ui.packet_size_line.text().strip())
+            if packet_size > 65535:
+                raise ValueError(_("Packet size too ridiculously large"))
         except ValueError:
             self.show_error("Invalid input")
             return
@@ -332,7 +335,7 @@ class PingPung(QtGui.QMainWindow):
         else:
             seq_num = 0
 
-        tab_ui.thread = PingThread(ip, ping_count, interval, 64, tab_ui.tab_id, seq_num)
+        tab_ui.thread = PingThread(ip, ping_count, interval, packet_size, tab_ui.tab_id, seq_num)
         self.connect_slots(tab_ui.thread)
         # Not in a try/except block because the thread does its own error checking and reports via signals
         tab_ui.thread.start()
