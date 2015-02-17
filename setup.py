@@ -44,5 +44,5 @@ setup(name='PingPung',
       "Topic :: System :: Networking :: Monitoring",
       "Topic :: Utilities",
       ],
-      #test_suite = "tests",
+      test_suite = "tests",
      )
