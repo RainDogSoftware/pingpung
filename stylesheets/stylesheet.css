@@ -318,6 +318,10 @@ p a {
   font-weight: 400;
 }
 
+p.footnote {
+  font-size: .7em;
+}
+
 blockquote {
   font-size: 1.6em;
   border-left: 10px solid #e9e9e9;
