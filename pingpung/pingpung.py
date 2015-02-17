@@ -99,8 +99,8 @@ class PingPung(QtGui.QMainWindow):
 
     def show_about(self):
         #TODO:  Figure out why this window just flashes up briefly
-        about = uic.loadUi("ppui/about.ui")
-        about.show()
+        self.about = uic.loadUi("ppui/about.ui")
+        self.about.show()
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
@@ -145,6 +145,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.save_log_button.clicked.connect(lambda: self.save_log(tab_ui))
 
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
+        self.ui.tab_bar.setCurrentWidget(tab_ui)
 
     def current_index(self):
         current = self.ui.tab_bar.currentWidget()

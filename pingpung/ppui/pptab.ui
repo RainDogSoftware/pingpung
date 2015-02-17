@@ -17,7 +17,14 @@
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
      <item row="2" column="0" rowspan="4" colspan="4">
-      <widget class="QTextEdit" name="output_textedit"/>
+      <widget class="QTextEdit" name="output_textedit">
+       <property name="undoRedoEnabled">
+        <bool>false</bool>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="ip_line_label">
@@ -210,6 +217,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>ip_line</tabstop>
+  <tabstop>session_line</tabstop>
+  <tabstop>ping_count_line</tabstop>
+  <tabstop>interval_line</tabstop>
+  <tabstop>toggle_start</tabstop>
+  <tabstop>stats_table</tabstop>
+  <tabstop>clear_log_button</tabstop>
+  <tabstop>save_log_button</tabstop>
+  <tabstop>toggle_audio</tabstop>
+  <tabstop>alert_success</tabstop>
+  <tabstop>alert_failure</tabstop>
+  <tabstop>output_textedit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

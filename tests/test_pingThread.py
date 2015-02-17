@@ -1,6 +1,7 @@
 from unittest import TestCase, mock
-
+from pplib import pping
 from PyQt4 import QtCore
+import time
 
 from pingpung import pingpung as pp
 #from pplib import pping
@@ -20,4 +21,14 @@ class TestPingThread(TestCase):
         self.assertEqual(this_thread.start_num, 6)
 
     def test_run(self):
-        pass
+        this_thread = pp.PingThread(1, 2, 3, 4, 5, 0)
+
+        # Mock up the actual ping call, confirm it's mocked
+        pping.ping = mock.MagicMock(return_value=3)
+        self.assertEqual(pping.ping("some", "args", key='value'), 3)
+        #pping.ping.assert_called_with(3, 4, 5, key='value')
+
+
+
+
+
