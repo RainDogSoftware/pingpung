@@ -97,12 +97,11 @@ class PingPung(QtGui.QMainWindow):
         self.ui.show()
         sys.exit(app.exec_())
 
-    def remove_tab(self, index):
-        if self.ui.tab_bar.count() >= 2:
-            self.ui.tab_bar.removeTab(index)
-
-
     def show_about(self):
+        """
+        Loads and displays the About page of the UI
+        :return:
+        """
         self.about = uic.loadUi("ppui/about.ui")
         self.about.show()
 
@@ -151,6 +150,15 @@ class PingPung(QtGui.QMainWindow):
         # Always start with one tab
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
         self.ui.tab_bar.setCurrentWidget(tab_ui)
+
+    def remove_tab(self, index):
+        """
+        Removes this tab as long as it is not the only remaining tab
+        :param index:
+        :return:
+        """
+        if self.ui.tab_bar.count() >= 2:
+            self.ui.tab_bar.removeTab(index)
 
     def current_index(self):
         current = self.ui.tab_bar.currentWidget()
@@ -330,8 +338,8 @@ class PingPung(QtGui.QMainWindow):
             packet_size = int(tab_ui.packet_size_line.text().strip())
             if packet_size > 65535:
                 raise ValueError(_("Packet size too ridiculously large"))
-        except ValueError:
-            self.show_error("Invalid input")
+        except ValueError as e:
+            self.show_error("Invalid input\n" + str(e))
             return
         # We treat start/stop as start/pause, and a new session is indicated by a -1 sequence number
         # If positive, pick up from that sequence number
