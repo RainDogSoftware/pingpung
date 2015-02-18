@@ -85,7 +85,7 @@ class PingPung(QtGui.QMainWindow):
         self.tab_button.setText('+')
         self.ui.tab_bar.setCornerWidget(self.tab_button)
         self.tab_button.clicked.connect(self.new_tab)
-        self.ui.tab_bar.tabCloseRequested.connect(self.ui.tab_bar.removeTab)
+        self.ui.tab_bar.tabCloseRequested.connect(self.remove_tab)
 
         # Menu actions
         self.ui.actionExit.triggered.connect(QtGui.qApp.quit)
@@ -96,6 +96,11 @@ class PingPung(QtGui.QMainWindow):
 
         self.ui.show()
         sys.exit(app.exec_())
+
+    def remove_tab(self, index):
+        if self.ui.tab_bar.count() >= 2:
+            self.ui.tab_bar.removeTab(index)
+
 
     def show_about(self):
         self.about = uic.loadUi("ppui/about.ui")
