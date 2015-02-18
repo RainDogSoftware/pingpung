@@ -331,9 +331,8 @@ def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     )
   
     packet = header + data
-    print(len(packet))
     send_time = time.time()
-  
+    print(socket_id)
     try:
         this_socket.sendto(packet, (dest_ip, 1))  # Port number is irrelevant for ICMP
     except socket.error as e:

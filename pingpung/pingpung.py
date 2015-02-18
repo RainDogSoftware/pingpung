@@ -107,13 +107,13 @@ class PingPung(QtGui.QMainWindow):
 
     def run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
-        if not self._set_inactive(tab_ui.tab_id):
+        if not self.set_inactive(tab_ui.tab_id):
             self._set_active(tab_ui.tab_id)
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self._set_inactive)
+        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self.set_inactive)
         self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
         self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
 
@@ -157,8 +157,13 @@ class PingPung(QtGui.QMainWindow):
         :param index:
         :return:
         """
+
         if self.ui.tab_bar.count() >= 2:
-            self.ui.tab_bar.removeTab(index)
+            tab_ui = self.ui.tab_bar.widget(index) # Get the tab object
+            self.set_inactive(tab_ui.tab_id)       # Stop the ping (by id, NOT index)
+            self.ui.tab_bar.removeTab(index)       # Remove the tab from UI (by index)
+            self.tabs.pop(tab_ui.tab_id)           # Clear it from tabs dictionary
+            tab_ui.setParent(None)                 # Free the object for garbage collection
 
     def current_index(self):
         current = self.ui.tab_bar.currentWidget()
@@ -232,6 +237,7 @@ class PingPung(QtGui.QMainWindow):
                             ("% Success", 0),
                             ("Highest Latency", ""),
                             ("Lowest Latency", ""),
+                            ("Average Latency", ""),
                            ])
 
     @staticmethod
@@ -300,9 +306,9 @@ class PingPung(QtGui.QMainWindow):
         tab_ui = self.tabs[id]
         tab_ui.output_textedit.append(_("Test Suite Complete"))
         tab_ui.last_num = -1
-        self._set_inactive(id)
+        self.set_inactive(id)
 
-    def _set_inactive(self, id):
+    def set_inactive(self, id):
         """
         Sets the tab to the inactive state, including gui changes and terminating the thread
         :param id: the id number of the tab to set as inactive
