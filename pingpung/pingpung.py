@@ -347,8 +347,10 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
         index = self.get_index(tab_ui)
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon(""))
+
         if hasattr(tab_ui, "thread") and hasattr(tab_ui.thread, "isRunning") and (tab_ui.thread.isRunning() is True):
             tab_ui.thread.terminate()
+            tab_ui.output_textedit.append(_("Pausing..."))
             return True
         else:
             return False
@@ -382,6 +384,7 @@ class PingPung(QtGui.QMainWindow):
         else:
             seq_num = 0
 
+        tab_ui.output_textedit.append(_("Starting..."))
         tab_ui.thread = PingThread(ip, ping_count, interval, packet_size, tab_ui.tab_id, seq_num)
         self.connect_slots(tab_ui.thread)
         # Not in a try/except block because the thread does its own error checking and reports via signals
