@@ -155,7 +155,7 @@ class PingPung(QtGui.QMainWindow):
         """
         Removes this tab as long as it is not the only remaining tab
         :param index:
-        :return:
+        :return: None
         """
 
         if self.ui.tab_bar.count() >= 2:
@@ -180,7 +180,7 @@ class PingPung(QtGui.QMainWindow):
         """
         Clear the main output window, stat data dict, reset ping sequence number,  reset stats display table
         :param tab_ui: the tab instance to work on
-        :return: None
+        :return:
         """
         tab_ui.output_textedit.clear()
         tab_ui.stat_dict = self.get_default_stats()
@@ -191,7 +191,7 @@ class PingPung(QtGui.QMainWindow):
         """
         Save the contents of the main output box to a plain text file of the user's choosing
         :param tab_ui: the tab instance to work on
-        :return: None
+        :return:
         """
         file_types = "Plain Text (*.txt);;Plain Text (*.log)"
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
@@ -207,6 +207,13 @@ class PingPung(QtGui.QMainWindow):
                 self.show_error("Unable to save log file.", e)
 
     def show_result(self, result):
+        """
+        This method accepts the result dictionary from a ping and updates the text in the output box and the color of
+        the tab text depending on the result.  It also initiates playback of success/fail sounds if the option is
+        enabled in GUI
+        :param result: The disctionary containing the results of the last ping
+        :return:
+        """
         # The ID number of the tab which sent the ping is provided by the PingThread class
         tab_ui = self.tabs[result["tabID"]]
         index = self.get_index(tab_ui)
@@ -231,6 +238,10 @@ class PingPung(QtGui.QMainWindow):
 
     @staticmethod
     def get_default_stats():
+        """
+        Takes no arguments, returns the disctionary to be used in the stats display
+        :return:
+        """
         return OrderedDict([("Success", 0),
                             ("Failure", 0),
                             ("", ""),
@@ -242,6 +253,12 @@ class PingPung(QtGui.QMainWindow):
 
     @staticmethod
     def format_output_success(result):
+        """
+        This method accepts the result dictionary from a successful ping and generates colorized output
+        :param result:
+        :return: An html-formatted colorized string containing the timestamp, sequence number, text, packet size and
+        responding IP from a successful ping
+        """
         delay = result["Delay"]
         if delay > 100:
             color = "red"
@@ -258,6 +275,11 @@ class PingPung(QtGui.QMainWindow):
 
     @staticmethod
     def format_output_failure(result):
+        """
+        This method accepts the result disctionary from a ping and generates colorized output
+        :param result:
+        :return: An html-formatted string containing the timestamp and error message
+        """
         output = "<font color='red'>{:s} - {:s}</font>".format(result["Timestamp"], result['Message'])
         return output
 
@@ -293,6 +315,8 @@ class PingPung(QtGui.QMainWindow):
         else:
             tab_ui.stat_dict["Failure"] += 1
 
+        # TODO: Average latency
+
         tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self.refresh_stat_display(tab_ui)
@@ -301,18 +325,22 @@ class PingPung(QtGui.QMainWindow):
     # Ping Management
 
     def _suite_complete(self, id):
-        # Fetch the tab that matches the ID of the resulting packet (NOT index number), write output, clear the
-        # last_num setting so sequence will start from 0 on next suite start
+        """
+        This is called when a limited number of pings have been specified.  It resets the appropriate counters, sets
+        the program state to inacive, and adds a completion notice to the output box.
+        :param id: The id number (not index) of the relevant tab
+        :return:
+        """
         tab_ui = self.tabs[id]
         tab_ui.output_textedit.append(_("Test Suite Complete"))
-        tab_ui.last_num = -1
+        tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
         self.set_inactive(id)
 
     def set_inactive(self, id):
         """
         Sets the tab to the inactive state, including gui changes and terminating the thread
-        :param id: the id number of the tab to set as inactive
-        :return: None
+        :param id: The id number of the tab to set as inactive
+        :return:
         """
         tab_ui = self.tabs[id]
         tab_ui.toggle_start.setText(_("Start"))
@@ -328,8 +356,8 @@ class PingPung(QtGui.QMainWindow):
     def _set_active(self, id):
         """
         Sets the tab to active state, including gui changes and starting the ping thread
-        :param id: the id number of the tab to set as active
-        :return: None
+        :param id: The id number of the tab to set as active
+        :return:
         """
         tab_ui = self.tabs[id]
         index = self.get_index(tab_ui)
