@@ -332,7 +332,14 @@ class PingPung(QtGui.QMainWindow):
         :return:
         """
         tab_ui = self.tabs[id]
-        tab_ui.output_textedit.append(_("Test Suite Complete"))
+
+        # Some shorter variable names for brevity in upcoming list comprehension
+        sd = tab_ui.stat_dict
+        ot = tab_ui.output_textedit
+
+        ot.append(_("Test Suite Complete"))
+        [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x,y in sd.items()]
+
         tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
         self.set_inactive(id)
 
