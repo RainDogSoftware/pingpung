@@ -36,6 +36,9 @@ class PingThread(QtCore.QThread):
     """
 
     def __init__(self, ip, ping_count, interval, packet_size, tab_id, start_num):
+        """
+
+        """
         super(PingThread, self).__init__()
         self.ip = ip
         self.ping_count = int(ping_count)
@@ -43,7 +46,6 @@ class PingThread(QtCore.QThread):
         self.packet_size = int(packet_size)
         self.tab_id = int(tab_id)
         self.start_num = start_num
-
 
     def run(self):
         seq_num = self.start_num
@@ -133,18 +135,19 @@ class PingPung(QtGui.QMainWindow):
 
     def _new_tab(self, *args):
         """
-
-        :param args:
+        Creates a new tab from the pptab.ui file.  Each tab is assigned a unique integer ID number.  This is how
+        we keep track of which pings belong to which tab while having multiple simultaneous pings and tabs.
+        :param args: Unused
         :return:
         """
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
-        # As noted in __init__, tabs must have an unchanging ID number for thread support
+        # As noted above, tabs must have an unchanging ID number for thread support
         tab_ui = uic.loadUi('ppui/pptab.ui')
         tab_ui.tab_id = next(self.counter_iter)
         tab_ui.last_num = -1
 
+        # No non-Windows audio support yet.  I'll get to it!  I promise!
         if sys.platform != "win32":
-            print("NOT WINDOWS!")
             tab_ui.audio_options.setEnabled(False)
 
         # We keep an OrderedDict of the ping statistics for each tab.  This is used directly by the stats table
@@ -164,7 +167,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Connect the clear/save log buttons to actions
         tab_ui.clear_log_button.clicked.connect(lambda: self._clear_log(tab_ui))
-        tab_ui.save_log_button.clicked.connect(lambda: self.save_log(tab_ui))
+        tab_ui.save_log_button.clicked.connect(lambda: self._save_log(tab_ui))
 
         # Always start with one tab
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
@@ -179,14 +182,10 @@ class PingPung(QtGui.QMainWindow):
 
         if self.ui.tab_bar.count() >= 2:
             tab_ui = self.ui.tab_bar.widget(index) # Get the tab object
-            self._set_inactive(tab_ui.tab_id)       # Stop the ping (by id, NOT index)
+            self._set_inactive(tab_ui.tab_id)      # Stop the ping (by id, NOT index)
             self.ui.tab_bar.removeTab(index)       # Remove the tab from UI (by index)
             self.tabs.pop(tab_ui.tab_id)           # Clear it from tabs dictionary
-            tab_ui.setParent(None)                 # Free the object for garbage collection
-
-    #def _current_index(self):
-    #    current = self.ui.tab_bar.currentWidget()
-    #    return self.ui.tab_bar.indexOf(current)
+            tab_ui.deleteLater()                   # Free the object for garbage collection
 
     def _get_index(self, tab_ui):
         return self.ui.tab_bar.indexOf(tab_ui)
@@ -206,7 +205,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.last_num = -1
         self._refresh_stat_display(tab_ui)
 
-    def save_log(self, tab_ui):
+    def _save_log(self, tab_ui):
         """
         Save the contents of the main output box to a plain text file of the user's choosing
         :param tab_ui: the tab instance to work on
@@ -217,7 +216,6 @@ class PingPung(QtGui.QMainWindow):
         if len(filename) > 0:  # Making sure the user selected a file (didn't hit Cancel)
             file_handle = open(filename, 'w')
             try:
-                raise IndexError
                 file_handle.write(tab_ui.output_textedit.toPlainText())
                 file_handle.close()
             except Exception as e:
