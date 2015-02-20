@@ -224,6 +224,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>ip_line</tabstop>
+  <tabstop>session_line</tabstop>
+  <tabstop>ping_count_line</tabstop>
+  <tabstop>interval_line</tabstop>
+  <tabstop>toggle_start</tabstop>
+  <tabstop>stats_table</tabstop>
+  <tabstop>clear_log_button</tabstop>
+  <tabstop>save_log_button</tabstop>
+  <tabstop>toggle_audio</tabstop>
+  <tabstop>alert_success</tabstop>
+  <tabstop>alert_failure</tabstop>
+  <tabstop>output_textedit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

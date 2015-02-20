@@ -1,5 +1,6 @@
 import sys
 import time
+import os
 from collections import OrderedDict
 from itertools import count
 from gettext import gettext as _
@@ -8,6 +9,10 @@ from PyQt4 import QtCore, QtGui, uic
 
 from pplib import pping, audio
 from pplib.pptools import debug
+
+# Helper function
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 ############################################################################################
 # Ping Thread
@@ -106,6 +111,7 @@ class PingPung(QtGui.QMainWindow):
         :return:
         """
         self.about = uic.loadUi("ppui/about.ui")
+        self.about.version_label.setText(read('VERSION'))
         self.about.show()
 
     def _run_button_action(self, tab_ui):
@@ -136,6 +142,10 @@ class PingPung(QtGui.QMainWindow):
         tab_ui = uic.loadUi('ppui/pptab.ui')
         tab_ui.tab_id = next(self.counter_iter)
         tab_ui.last_num = -1
+
+        if sys.platform != "win32":
+            print("NOT WINDOWS!")
+            tab_ui.audio_options.setEnabled(False)
 
         # We keep an OrderedDict of the ping statistics for each tab.  This is used directly by the stats table
         tab_ui.stat_dict = self.get_default_stats()

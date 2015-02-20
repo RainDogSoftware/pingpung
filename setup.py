@@ -22,7 +22,7 @@ exe_build_options = dict(path=sys.path,
                          )
 
 setup(name='PingPung',
-      version='0.0.4',
+      version=read('pingpung/VERSION'),
       author="Josh Price",
       author_email="Price.JoshuaD@Gmail.com",
       description='Python3/QT4 Multiplatform Ping Application',
