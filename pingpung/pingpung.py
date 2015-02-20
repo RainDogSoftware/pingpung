@@ -89,7 +89,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Menu actions
         self.ui.actionExit.triggered.connect(QtGui.qApp.quit)
-        self.ui.actionAbout_PingPung.triggered.connect(self.show_about)
+        self.ui.actionAbout_PingPung.triggered.connect(self._show_about)
 
         # Always start with one tab
         self.new_tab()
@@ -97,7 +97,7 @@ class PingPung(QtGui.QMainWindow):
         self.ui.show()
         sys.exit(app.exec_())
 
-    def show_about(self):
+    def _show_about(self):
         """
         Loads and displays the About page of the UI
         :return:
@@ -105,15 +105,15 @@ class PingPung(QtGui.QMainWindow):
         self.about = uic.loadUi("ppui/about.ui")
         self.about.show()
 
-    def run_button_action(self, tab_ui):
+    def _run_button_action(self, tab_ui):
         #if this tab contains a running thread, terminate it
-        if not self.set_inactive(tab_ui.tab_id):
+        if not self._set_inactive(tab_ui.tab_id):
             self._set_active(tab_ui.tab_id)
 
     def connect_slots(self, sender):
         self.connect(sender, QtCore.SIGNAL('complete'), self.show_result)
         self.connect(sender, QtCore.SIGNAL('error'), self.show_error)
-        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self.set_inactive)
+        self.connect(sender, QtCore.SIGNAL('set_state_inactive'), self._set_inactive)
         self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
         self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
 
@@ -136,11 +136,11 @@ class PingPung(QtGui.QMainWindow):
         self.tabs[tab_ui.tab_id] = tab_ui
 
         # Connect enter key to start/stop ping in tab, connect start/stop button as well
-        tab_ui.ip_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
-        tab_ui.session_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
-        tab_ui.ping_count_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
-        tab_ui.interval_line.returnPressed.connect(lambda: self.run_button_action(tab_ui))
-        tab_ui.toggle_start.clicked.connect(lambda: self.run_button_action(tab_ui))
+        tab_ui.ip_line.returnPressed.connect(lambda: self._run_button_action(tab_ui))
+        tab_ui.session_line.returnPressed.connect(lambda: self._run_button_action(tab_ui))
+        tab_ui.ping_count_line.returnPressed.connect(lambda: self._run_button_action(tab_ui))
+        tab_ui.interval_line.returnPressed.connect(lambda: self._run_button_action(tab_ui))
+        tab_ui.toggle_start.clicked.connect(lambda: self._run_button_action(tab_ui))
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
 
         # Connect the clear/save log buttons to actions
@@ -160,7 +160,7 @@ class PingPung(QtGui.QMainWindow):
 
         if self.ui.tab_bar.count() >= 2:
             tab_ui = self.ui.tab_bar.widget(index) # Get the tab object
-            self.set_inactive(tab_ui.tab_id)       # Stop the ping (by id, NOT index)
+            self._set_inactive(tab_ui.tab_id)       # Stop the ping (by id, NOT index)
             self.ui.tab_bar.removeTab(index)       # Remove the tab from UI (by index)
             self.tabs.pop(tab_ui.tab_id)           # Clear it from tabs dictionary
             tab_ui.setParent(None)                 # Free the object for garbage collection
@@ -337,13 +337,15 @@ class PingPung(QtGui.QMainWindow):
         sd = tab_ui.stat_dict
         ot = tab_ui.output_textedit
 
-        ot.append(_("Test Suite Complete"))
+        # Don't bother trying to clean/speed this up by putting a single <strong> tag around all lines at once, the gui
+        # will only apply it to that one line.  Means we've got to <strong> each line individually.
+        ot.append(_("<strong>Test Suite Complete</strong>"))
         [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x,y in sd.items()]
 
         tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
-        self.set_inactive(id)
+        self._set_inactive(id)
 
-    def set_inactive(self, id):
+    def _set_inactive(self, id):
         """
         Sets the tab to the inactive state, including gui changes and terminating the thread
         :param id: The id number of the tab to set as inactive
@@ -379,16 +381,22 @@ class PingPung(QtGui.QMainWindow):
             interval = int(tab_ui.interval_line.text().strip())
             label = tab_ui.session_line.text().strip()
             packet_size = int(tab_ui.packet_size_line.text().strip())
-            if packet_size > 65535:
-                raise ValueError(_("Packet size too ridiculously large"))
         except ValueError as e:
             self.show_error("Invalid input\n" + str(e))
             return
+
+        if packet_size > 65535:
+                raise ValueError(_("Packet size too ridiculously large"))
         # We treat start/stop as start/pause, and a new session is indicated by a -1 sequence number
         # If positive, pick up from that sequence number
         if tab_ui.last_num > 0:
             seq_num = tab_ui.last_num
         else:
+            seq_num = 0
+
+        # Without this check, you could run an infitine ping (count 0), pause it, then run a finite ping with a count
+        # lower than last_num, and it would instantly think the suite is complete.  Semi-obscure bug but worth a fix.
+        if ping_count > 0:
             seq_num = 0
 
         tab_ui.output_textedit.append(_("Starting..."))
