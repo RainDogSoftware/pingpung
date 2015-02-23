@@ -169,7 +169,12 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.clear_log_button.clicked.connect(lambda: self._clear_log(tab_ui))
         tab_ui.save_log_button.clicked.connect(lambda: self._save_log(tab_ui))
 
+        # The "average table". Item 1 is count of successful pings, item 2 is total latency.
         tab_ui.avg_table = [0,0]
+
+        # Until I can figure out how to make copy/paste automaticall take whole selection, this is how you copy
+        # the complete state total
+        tab_ui.copy_stats_button.clicked.connect(lambda: self.copy_stats(tab_ui.stats_table))
 
         # Always start with one tab
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
@@ -181,13 +186,28 @@ class PingPung(QtGui.QMainWindow):
         :param index:
         :return:
         """
-
         if self.ui.tab_bar.count() >= 2:
             tab_ui = self.ui.tab_bar.widget(index) # Get the tab object
             self._set_inactive(tab_ui.tab_id)      # Stop the ping (by id, NOT index)
             self.ui.tab_bar.removeTab(index)       # Remove the tab from UI (by index)
             self.tabs.pop(tab_ui.tab_id)           # Clear it from tabs dictionary
             tab_ui.deleteLater()                   # Free the object for garbage collection
+
+    def copy_stats(self, stats):
+        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0,0,11,1), True)
+        selected = [x for x in stats.selectedItems()]
+        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0,0,11,1), False)
+
+        resorted = self._recombine_list(selected)
+        result = "\n".join([item.text() for item in resorted])
+        clipboard = QtGui.QApplication.clipboard()
+        clipboard.setText(result)
+
+    def _recombine_list(self, a_list):
+        # This shouldn't be necessary.  I'm either selecting wrong from the table or missing the more obvious
+        # way to combine the lists
+        half = int(len(a_list)/2)
+        return [item for sublist in zip(a_list[:half],a_list[half:]) for item in sublist]
 
     def _get_index(self, tab_ui):
         return self.ui.tab_bar.indexOf(tab_ui)
@@ -356,6 +376,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self._refresh_stat_display(tab_ui)
+
 
     ############################################################################################
     # Ping Management
