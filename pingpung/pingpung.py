@@ -169,6 +169,8 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.clear_log_button.clicked.connect(lambda: self._clear_log(tab_ui))
         tab_ui.save_log_button.clicked.connect(lambda: self._save_log(tab_ui))
 
+        tab_ui.avg_table = [0,0]
+
         # Always start with one tab
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
         self.ui.tab_bar.setCurrentWidget(tab_ui)
@@ -203,6 +205,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.output_textedit.clear()
         tab_ui.stat_dict = self.get_default_stats()
         tab_ui.last_num = -1
+        tab_ui.avg_table = [0,0] # Indicate no pings this session
         self._refresh_stat_display(tab_ui)
 
     def _save_log(self, tab_ui):
@@ -239,6 +242,7 @@ class PingPung(QtGui.QMainWindow):
             self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 128, 0))
             output = self.format_output_success(result)
             tab_ui.last_num = result["SeqNumber"]
+
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
                 audio.play("data/woohoo.wav")
         else:
@@ -336,7 +340,10 @@ class PingPung(QtGui.QMainWindow):
             tab_ui.stat_dict["Failure"] += 1
 
         # TODO: Average latency
-
+        #tab_ui.stat_dict["Average Latency"] =
+        tab_ui.avg_table[0] += 1
+        tab_ui.avg_table[1] += result["Delay"]
+        tab_ui.stat_dict["Average Latency"] = round(tab_ui.avg_table[1] / tab_ui.avg_table[0], 2)
         tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self._refresh_stat_display(tab_ui)
