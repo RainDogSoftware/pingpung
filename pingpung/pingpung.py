@@ -263,13 +263,18 @@ class PingPung(QtGui.QMainWindow):
     @staticmethod
     def get_default_stats():
         """
-        Takes no arguments, returns the disctionary to be used in the stats display
-        :return:
+        Takes no arguments, returns the ordered disctionary to be used in the stats display.  I believe an ordered
+        dictionary is the best approach here, as it alows me to store the data in the same object that's displayed
+        directly to the user.  I can keep them in a logical order while still accessing them by key (in case I decide
+        to change the order later, it won't break all my other functions that read/write to it)
+        :return: OrderedDict
         """
         return OrderedDict([("Success", 0),
+                            ("Last Success", ""),
                             ("Failure", 0),
-                            ("", ""),
+                            ("Last Failure", ""),
                             ("% Success", 0),
+                            ("", ""),
                             ("Highest Latency", ""),
                             ("Lowest Latency", ""),
                             ("Average Latency", ""),
@@ -318,6 +323,7 @@ class PingPung(QtGui.QMainWindow):
     def _update_stats(self, result, tab_ui):
         if result["Success"]:
             tab_ui.stat_dict["Success"] += 1
+            tab_ui.stat_dict["Last Success"] = result["Timestamp"]
             # This is sloppy,
             # TODO: come back and clean this up.
             high = tab_ui.stat_dict["Highest Latency"]
@@ -336,14 +342,21 @@ class PingPung(QtGui.QMainWindow):
                 tab_ui.stat_dict["Highest Latency"] = delay
             elif result["Delay"] < low:
                 tab_ui.stat_dict["Lowest Latency"] = delay
+
+            # The average table is a 2-item list.  the first item contains the number of successful pings (makes no sense
+            # to count latency on a ping that never returned) and the second is the total latency for all those pings
+            # combined.  Divide latency total by count, and we've got our average.
+            tab_ui.avg_table[0] += 1
+            tab_ui.avg_table[1] += result["Delay"]
+            tab_ui.stat_dict["Average Latency"] = round(tab_ui.avg_table[1] / tab_ui.avg_table[0], 2)
         else:
             tab_ui.stat_dict["Failure"] += 1
+            tab_ui.stat_dict["Last Failure"] = result["Timestamp"]
 
-        # TODO: Average latency
-        #tab_ui.stat_dict["Average Latency"] =
-        tab_ui.avg_table[0] += 1
-        tab_ui.avg_table[1] += result["Delay"]
-        tab_ui.stat_dict["Average Latency"] = round(tab_ui.avg_table[1] / tab_ui.avg_table[0], 2)
+
+
+
+
         tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self._refresh_stat_display(tab_ui)
