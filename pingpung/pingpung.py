@@ -353,10 +353,6 @@ class PingPung(QtGui.QMainWindow):
             tab_ui.stat_dict["Failure"] += 1
             tab_ui.stat_dict["Last Failure"] = result["Timestamp"]
 
-
-
-
-
         tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self._refresh_stat_display(tab_ui)
