@@ -253,6 +253,9 @@ class PingPung(QtGui.QMainWindow):
 
         self._update_stats(result, tab_ui)
 
+        #debugging
+        print(len(self.tabs))
+
     @staticmethod
     def get_default_stats():
         """
