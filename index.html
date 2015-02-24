@@ -61,13 +61,29 @@
           <pre><code>pip install pingpung</code>(coming soon)</pre>
           <p>and assuming you've got the dependencies above, just run the app with </p>
           <pre><code>sudo pingpung</code></pre>
-          <p><a href="faq.html">Why does PingPung need root?</a></p>
+          <p><a href="#root">Why does PingPung need root?</a></p>
 
           <h4>Run from Source</h4>
           <p>If you wish, you can always just fetch the source code and run it from there.  Install dependencies as described above.  You'll need to download it either by 'git clone' or simply downloading the source ZIP file.   </p>
           <p>Once you've got the files extracted, just run</p>
           <pre><code>python3 pingpung.py</code></pre>
 
+          <h2>FAQ</h2>
+          <h4>Does PingPung use my operating system's builtin ping utility?</h4>
+          <p>No.  PingPung was written specifically to avoid reliance on any particular OS implementation of 'ping'.  Instead, the library in use was adapted from an existing Python 3 console application which can be found here <a href="http://www.falatic.com/index.php/39/pinging-with-python" target="_blank">http://www.falatic.com/index.php/39/pinging-with-python</a></p>
+          <p>Because of this, PingPung requires root/admin privileges to run.  For details see below.</p>
+
+          <a name="root"></a>
+          <h4>Why does PingPung require root privileges?</h4>
+          <p>Creating a raw socket with which to craft a ping packet is a fairly low-level operation.  Any IP-network capable operating system has a builtin ping program, and part of the reason for that is because the OS maker can <a href="http://en.wikipedia.org/wiki/Setuid">setuid</a> that program so the user doesn't need to have those privileges to run it.</p>
+          <p>Technical stuff aside, it's because PingPung is designed to use its <em>own</em> ping system, not your operating system's, so it doesn't have the built-in permissions that your OS's ping program does.</p>
+          <p>Feel free to inspect the code if you have any concerns.</p>
+
+          <h4>Why use Qt?</h4>
+          <p>To be perfectly honest, it was simply because I had never used it, but had heard mostly good things about Qt's quality as a toolkit.  So far, I like most of it.</p>
+
+          <h4>What is love?</h4>
+          <p>Much like an M.L.T.  Or so I'm told.</p>
 
         </section>
 
