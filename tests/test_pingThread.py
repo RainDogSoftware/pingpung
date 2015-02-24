@@ -21,12 +21,22 @@ class TestPingThread(TestCase):
         self.assertEqual(this_thread.start_num, 6)
 
     def test_run(self):
-        this_thread = pp.PingThread(1, 2, 3, 4, 5, 0)
+        # Mock over the signal sending
 
-        # Mock up the actual ping call, confirm it's mocked
-        pping.ping = mock.MagicMock(return_value=3)
-        self.assertEqual(pping.ping("some", "args", key='value'), 3)
-        #pping.ping.assert_called_with(3, 4, 5, key='value')
+        # Mock over the actual ping call, confirm it's mocked
+        mock_result = {"Success": True,
+                       "Message": "Success",
+                       "Responder": "1.1.1.1",
+                       "SeqNumber": 42,
+                       "Delay": 42,
+                       "PacketSize": 42,
+                       "Timestamp": "Yesterday?"}
+        pping.ping = mock.MagicMock(return_value=mock_result)
+        self.assertEqual(pping.ping("junk"), mock_result)
+
+        # Then "run" some pings
+        this_thread = pp.PingThread(1, 2, 3, 4, 5, 6)
+
 
 
 

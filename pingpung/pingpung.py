@@ -117,7 +117,14 @@ class PingPung(QtGui.QMainWindow):
         self.about.show()
 
     def _run_button_action(self, tab_ui):
-        #if this tab contains a running thread, terminate it
+        """
+        The button always runs this one method, and we set to inactive first, no matter what the last state is.
+        Then, depending on the set_inactive method's return value (whether or not there was a running thread) we
+        either set the new state to active (if there was no thread to terminate) or finish with a job well done.
+        :param tab_ui: The ui element representing the current tab
+        :return:
+        """
+
         if not self._set_inactive(tab_ui.tab_id):
             self._set_active(tab_ui.tab_id)
 
@@ -219,19 +226,19 @@ class PingPung(QtGui.QMainWindow):
     def _clear_log(self, tab_ui):
         """
         Clear the main output window, stat data dict, reset ping sequence number,  reset stats display table
-        :param tab_ui: the tab instance to work on
+        :param tab_ui: The ui element representing the current tab
         :return:
         """
         tab_ui.output_textedit.clear()
         tab_ui.stat_dict = self.get_default_stats()
         tab_ui.last_num = -1
-        tab_ui.avg_table = [0,0] # Indicate no pings this session
+        tab_ui.avg_table = [0,0]
         self._refresh_stat_display(tab_ui)
 
     def _save_log(self, tab_ui):
         """
         Save the contents of the main output box to a plain text file of the user's choosing
-        :param tab_ui: the tab instance to work on
+        :param tab_ui: The ui element representing the current tab
         :return:
         """
         file_types = "Plain Text (*.txt);;Plain Text (*.log)"
@@ -251,7 +258,7 @@ class PingPung(QtGui.QMainWindow):
         This method accepts the result dictionary from a ping and updates the text in the output box and the color of
         the tab text depending on the result.  It also initiates playback of success/fail sounds if the option is
         enabled in GUI
-        :param result: The disctionary containing the results of the last ping
+        :param result: The dictionary containing the results of the last ping
         :return:
         """
         # The ID number of the tab which sent the ping is provided by the PingThread class
@@ -304,7 +311,7 @@ class PingPung(QtGui.QMainWindow):
     def format_output_success(result):
         """
         This method accepts the result dictionary from a successful ping and generates colorized output
-        :param result:
+        :param result: The dictionary containing the results of the last ping
         :return: An html-formatted colorized string containing the timestamp, sequence number, text, packet size and
         responding IP from a successful ping
         """
@@ -326,7 +333,7 @@ class PingPung(QtGui.QMainWindow):
     def format_output_failure(result):
         """
         This method accepts the result disctionary from a ping and generates colorized output
-        :param result:
+        :param result: The dictionary containing the results of the last ping
         :return: An html-formatted string containing the timestamp and error message
         """
         output = "<font color='red'>{:s} - {:s}</font>".format(result["Timestamp"], result['Message'])
@@ -341,6 +348,12 @@ class PingPung(QtGui.QMainWindow):
             tab_ui.stats_table.setItem(row, 1, QtGui.QTableWidgetItem(str(tab_ui.stat_dict[key])))
 
     def _update_stats(self, result, tab_ui):
+        """
+
+        :param result: The dictionary containing the results of the last ping
+        :param tab_ui: The ui element representing the current tab
+        :return:
+        """
         if result["Success"]:
             tab_ui.stat_dict["Success"] += 1
             tab_ui.stat_dict["Last Success"] = result["Timestamp"]
