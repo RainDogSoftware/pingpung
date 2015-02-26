@@ -10,17 +10,18 @@ from PyQt4 import QtCore, QtGui, uic
 from pplib import pping, audio
 from pplib.pptools import debug
 
+__author__ = 'Josh Price'
+
 # Helper function
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 ############################################################################################
 # Ping Thread
 class PingThread(QtCore.QThread):
     """
     A QThread subclass for running the pings.
-    :param args:
-    :return:
 
     Args:
         ip - the IP address or domain name of the target to ping
@@ -37,7 +38,14 @@ class PingThread(QtCore.QThread):
 
     def __init__(self, ip, ping_count, interval, packet_size, tab_id, start_num):
         """
-
+        :param args:
+            ip: The IP address or domain name of the target
+            ping_count: The number of packets to send.  A zero indicates continuous pings
+            interval: The delay in seconds between pings
+            packet size: The size of the payload in bytes
+            tab_id: The ID number of the tab which sent the ping
+            start_num:  The sequence number to begin with.  Allows pause/resume functionality
+        :return:
         """
         super(PingThread, self).__init__()
         self.ip = ip
@@ -129,7 +137,6 @@ class PingPung(QtGui.QMainWindow):
         self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
         self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
 
-
     ############################################################################################
     # Tab management
 
@@ -170,7 +177,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.save_log_button.clicked.connect(lambda: self._save_log(tab_ui))
 
         # The "average table". Item 1 is count of successful pings, item 2 is total latency.
-        tab_ui.avg_table = [0,0]
+        tab_ui.avg_table = [0, 0]
 
         # Until I can figure out how to make copy/paste automaticall take whole selection, this is how you copy
         # the complete state total
@@ -186,32 +193,32 @@ class PingPung(QtGui.QMainWindow):
         :param index:
         :return:
         """
-        if self.ui.tab_bar.count() >= 2:
-            tab_ui = self.ui.tab_bar.widget(index) # Get the tab object
-            self._set_inactive(tab_ui.tab_id)      # Stop the ping (by id, NOT index)
-            self.ui.tab_bar.removeTab(index)       # Remove the tab from UI (by index)
-            self.tabs.pop(tab_ui.tab_id)           # Clear it from tabs dictionary
-            tab_ui.deleteLater()                   # Free the object for garbage collection
+        if self.ui.tab_bar.count() > 1:
+            tab_ui = self.ui.tab_bar.widget(index)  # Get the tab object
+            self._set_inactive(tab_ui.tab_id)       # Stop the ping (by id, NOT index)
+            self.ui.tab_bar.removeTab(index)        # Remove the tab from UI (by index)
+            self.tabs.pop(tab_ui.tab_id)            # Clear it from tabs dictionary
+            tab_ui = None                           # I've had trouble predicting when Qt will garbage collect
 
     def copy_stats(self, stats):
-        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0,0,11,1), True)
+        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0, 0, 11, 1), True)
         selected = [x for x in stats.selectedItems()]
-        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0,0,11,1), False)
+        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0, 0, 11, 1), False)
 
         resorted = self._recombine_list(selected)
         result = "\n".join([item.text() for item in resorted])
         clipboard = QtGui.QApplication.clipboard()
         clipboard.setText(result)
 
+    @staticmethod
     def _recombine_list(self, a_list):
         # This shouldn't be necessary.  I'm either selecting wrong from the table or missing the more obvious
         # way to combine the lists
         half = int(len(a_list)/2)
-        return [item for sublist in zip(a_list[:half],a_list[half:]) for item in sublist]
+        return [item for sublist in zip(a_list[:half], a_list[half:]) for item in sublist]
 
     def _get_index(self, tab_ui):
         return self.ui.tab_bar.indexOf(tab_ui)
-
 
     ############################################################################################
     # Stats & Data
@@ -225,7 +232,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.output_textedit.clear()
         tab_ui.stat_dict = self.get_default_stats()
         tab_ui.last_num = -1
-        tab_ui.avg_table = [0,0] # Indicate no pings this session
+        tab_ui.avg_table = [0, 0]  # Indicate no pings this session
         self._refresh_stat_display(tab_ui)
 
     def _save_log(self, tab_ui):
@@ -235,7 +242,8 @@ class PingPung(QtGui.QMainWindow):
         :return:
         """
         file_types = "Plain Text (*.txt);;Plain Text (*.log)"
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
+        home = os.path.expanduser("~")
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', home, file_types)
         if len(filename) > 0:  # Making sure the user selected a file (didn't hit Cancel)
             file_handle = open(filename, 'w')
             try:
@@ -244,7 +252,7 @@ class PingPung(QtGui.QMainWindow):
             except Exception as e:
                 # I don't normally do blanket exceptions, but in this case any error means we can't save file so
                 # it all has the same effect.  Notify the user and move along.
-                self._show_error("Unable to save log file.", e)
+                self._show_error("Unable to save log file.", str(e))
 
     def _show_result(self, result):
         """
@@ -276,9 +284,6 @@ class PingPung(QtGui.QMainWindow):
         self.last_num = result["SeqNumber"]
 
         self._update_stats(result, tab_ui)
-
-        #debugging
-        print(len(self.tabs))
 
     @staticmethod
     def get_default_stats():
@@ -317,9 +322,9 @@ class PingPung(QtGui.QMainWindow):
             color = "green"
 
         ms = "<font color='{:s}'>{:.2f}</font>".format(color, delay)
-        output = "{:s} {:d} - {:s} - {:d} bytes from {:s}  time={:s} ms".format(result["Timestamp"], result['SeqNumber'],
-                                                                result['Message'], result["PacketSize"],
-                                                                result['Responder'], ms)
+        output = "{:s} {:d} - {:s} - {:d} bytes from {:s} time={:s} ms".format(result["Timestamp"], result['SeqNumber'],
+                                                                               result['Message'], result["PacketSize"],
+                                                                               result['Responder'], ms)
         return output
 
     @staticmethod
@@ -363,7 +368,7 @@ class PingPung(QtGui.QMainWindow):
             elif result["Delay"] < low:
                 tab_ui.stat_dict["Lowest Latency"] = delay
 
-            # The average table is a 2-item list.  the first item contains the number of successful pings (makes no sense
+            # The average table is a 2-item list. The first item contains the number of successful pings (makes no sense
             # to count latency on a ping that never returned) and the second is the total latency for all those pings
             # combined.  Divide latency total by count, and we've got our average.
             tab_ui.avg_table[0] += 1
@@ -377,18 +382,17 @@ class PingPung(QtGui.QMainWindow):
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self._refresh_stat_display(tab_ui)
 
-
     ############################################################################################
     # Ping Management
 
-    def _suite_complete(self, id):
+    def _suite_complete(self, tab_id):
         """
         This is called when a limited number of pings have been specified.  It resets the appropriate counters, sets
         the program state to inacive, and adds a completion notice to the output box.
-        :param id: The id number (not index) of the relevant tab
+        :param tab_id: The id number (not index) of the relevant tab
         :return:
         """
-        tab_ui = self.tabs[id]
+        tab_ui = self.tabs[tab_id]
 
         # Some shorter variable names for brevity in upcoming list comprehension
         sd = tab_ui.stat_dict
@@ -397,18 +401,18 @@ class PingPung(QtGui.QMainWindow):
         # Don't bother trying to clean/speed this up by putting a single <strong> tag around all lines at once, the gui
         # will only apply it to that one line.  Means we've got to <strong> each line individually.
         ot.append(_("<strong>Test Suite Complete</strong>"))
-        [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x,y in sd.items()]
+        [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x, y in sd.items()]
 
-        tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
-        self._set_inactive(id)
+        tab_ui.last_num = -1  # so sequence will start from 0 on next suite start
+        self._set_inactive(tab_id)
 
-    def _set_inactive(self, id):
+    def _set_inactive(self, tab_id):
         """
         Sets the tab to the inactive state, including gui changes and terminating the thread
-        :param id: The id number of the tab to set as inactive
+        :param tab_id: The id number of the tab to set as inactive
         :return:
         """
-        tab_ui = self.tabs[id]
+        tab_ui = self.tabs[tab_id]
         tab_ui.toggle_start.setText(_("Start"))
         tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
         index = self._get_index(tab_ui)
@@ -421,13 +425,13 @@ class PingPung(QtGui.QMainWindow):
         else:
             return False
 
-    def _set_active(self, id):
+    def _set_active(self, tab_id):
         """
         Sets the tab to active state, including gui changes and starting the ping thread
-        :param id: The id number of the tab to set as active
+        :param tab_id: The id number of the tab to set as active
         :return:
         """
-        tab_ui = self.tabs[id]
+        tab_ui = self.tabs[tab_id]
         index = self._get_index(tab_ui)
         # Default to black text (in case tab text is colored from previous session)
         self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(0, 0, 0))
@@ -443,6 +447,7 @@ class PingPung(QtGui.QMainWindow):
             return
 
         if packet_size > 65535:
+                self._show_error(_("Packet size too ridiculously large"))
                 raise ValueError(_("Packet size too ridiculously large"))
         # We treat start/stop as start/pause, and a new session is indicated by a -1 sequence number
         # If positive, pick up from that sequence number

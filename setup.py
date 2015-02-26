@@ -10,6 +10,7 @@ import os
 sys.path.append("pingpung")
 sys.path.append("pingpung/data")
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
@@ -45,5 +46,5 @@ setup(name='PingPung',
       "Topic :: System :: Networking :: Monitoring",
       "Topic :: Utilities",
       ],
-      test_suite = "tests",
+      test_suite="tests",
      )

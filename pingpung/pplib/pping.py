@@ -334,7 +334,7 @@ def _send_one_ping(this_socket, dest_ip, socket_id, seq_number, num_data_bytes):
     send_time = time.time()
     try:
         this_socket.sendto(packet, (dest_ip, 1))  # Port number is irrelevant for ICMP
-    except socket.error as e:
+    except socket.error:
         raise SocketError 
   
     return send_time
@@ -360,17 +360,11 @@ def _receive_one_ping(this_socket, socket_id, timeout):
         rec_packet, addr = this_socket.recvfrom(ICMP_MAX_RECV)
   
         ip_header = rec_packet[:20]
-        iph_version, iph_type_of_svc, iph_length, \
-        iph_id, iph_flags, iph_ttl, iph_protocol, \
-        iph_checksum, iph_src_ip, iph_dest_ip = struct.unpack(
-            "!BBHHHBBHII", ip_header
-        )
+        iph_version, iph_type_of_svc, iph_length, iph_id, iph_flags, iph_ttl, iph_protocol, \
+        iph_checksum, iph_src_ip, iph_dest_ip = struct.unpack("!BBHHHBBHII", ip_header)
   
         icmp_header = rec_packet[20:28]
-        icmp_type, icmp_code, icmp_checksum, \
-        icmp_packet_id, icmp_seq_number = struct.unpack(
-            "!BBHHH", icmp_header
-        )
+        icmp_type, icmp_code, icmp_checksum, icmp_packet_id, icmp_seq_number = struct.unpack("!BBHHH", icmp_header)
   
         if icmp_packet_id == socket_id:  # Our packet
             data_size = len(rec_packet) - 28
