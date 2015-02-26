@@ -183,7 +183,12 @@ import datetime
 import itertools
 
 
-id_gen = itertools.cycle(range(0, 65535))
+# This is how we manage multi-threading.  In addition to the sequence number, we include an identifier integer.  The
+# cycling generator below is how we efficiently create that id.  It is used to match the sending tab to the appropriate
+# reply.  This means we can theoretically support 65535 tabs all running a ping at the same time.
+#
+# Can't honestly say I've tested that though.
+id_gen = itertools.cycle(range(0, 65536))
 
 if sys.platform == "win32":
     # On Windows, the best timer is time.clock()
@@ -263,9 +268,7 @@ def ping(dest_ip, timeout, seq_number, num_data_bytes):
         raise SocketError("Unable to create socket.  Verify app is running as root/admin.  \nSee README for details.")
   
     # To make "unique" socket IDs for safe threading.  
-    # Each ping gets a socket ID number from a 1-65535 cycling iterator.  
-    # Theoretically, this means that it can support over 65000 simultaneous pings
-    # without worrying about a socket ID clash
+    # Each ping gets a socket ID number from a 1-65535 cycling iterator.
     socket_id = next(id_gen)
   
     try:
