@@ -1,11 +1,19 @@
+import sys
+import os
+# having a little trouble here.  On windows, I need to use cx_freeze's "setup", but everywhere else, I just
+# want standard setuptools.  The problem is that apparently cx_freeze's setup doesn't understand "test_suite"
+# so I can't run unit tests.
+
 try:
     from cx_Freeze import setup, Executable
     executables = [Executable('pingpung/pingpung.py', base="Win32Gui")]
 except ImportError:
     from setuptools import setup
     executables = None
-import sys
-import os
+
+# This is an ugly hack which allows me to use setuptools' setup method instead of cx_freeze when TESTING on Windows
+if sys.argv[1] == "test":
+    from setuptools import setup
 
 sys.path.append("pingpung")
 sys.path.append("pingpung/data")

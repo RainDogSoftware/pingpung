@@ -89,7 +89,8 @@ class PingPung(QtGui.QMainWindow):
     def __init__(self):
         app = QtGui.QApplication(sys.argv)
         super(PingPung, self).__init__()
-        self.ui = uic.loadUi('ppui/maingui.ui')
+        FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/maingui.ui")
+        self.ui = uic.loadUi(FILEPATH)
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
@@ -113,15 +114,13 @@ class PingPung(QtGui.QMainWindow):
         # Always start with one tab
         self._new_tab()
 
-        self.ui.show()
-        sys.exit(app.exec_())
-
     def _show_about(self):
         """
         Loads and displays the About page of the UI
         :return:
         """
-        self.about = uic.loadUi("ppui/about.ui")
+        FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/about.ui")
+        self.about = uic.loadUi(FILEPATH)
         self.about.version_label.setText(read('VERSION'))
         self.about.show()
 
@@ -151,7 +150,8 @@ class PingPung(QtGui.QMainWindow):
         """
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
         # As noted above, tabs must have an unchanging ID number for thread support
-        tab_ui = uic.loadUi('ppui/pptab.ui')
+        FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/pptab.ui")
+        tab_ui = uic.loadUi(FILEPATH)
         tab_ui.tab_id = next(self.counter_iter)
         tab_ui.last_num = -1
 
@@ -480,4 +480,7 @@ class PingPung(QtGui.QMainWindow):
             self.ui.tab_bar.setTabText(index, " - ".join([ip, label]))
 
 if __name__ == '__main__':
-    PingPung()
+    pp = PingPung()
+    app = QtGui.QApplication(sys.argv)
+    pp.ui.show()
+    sys.exit(app.exec_())
