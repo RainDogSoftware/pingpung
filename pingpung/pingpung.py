@@ -235,7 +235,8 @@ class PingPung(QtGui.QMainWindow):
         :return:
         """
         file_types = "Plain Text (*.txt);;Plain Text (*.log)"
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', '.', file_types)
+        home = os.path.expanduser("~")
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Log file', home, file_types)
         if len(filename) > 0:  # Making sure the user selected a file (didn't hit Cancel)
             file_handle = open(filename, 'w')
             try:
@@ -276,9 +277,6 @@ class PingPung(QtGui.QMainWindow):
         self.last_num = result["SeqNumber"]
 
         self._update_stats(result, tab_ui)
-
-        #debugging
-        print(len(self.tabs))
 
     @staticmethod
     def get_default_stats():
