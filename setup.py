@@ -26,9 +26,7 @@ exe_build_options = dict(path=sys.path,
                          include_files=["pingpung/data", "pingpung/ppui"],
                          icon='pingpung/data/icon.ico',
                          excludes=["tkinter"],
-                         base='Win32GUI',
-
-                         )
+                         base='Win32GUI')
 
 setup(name='PingPung',
       version=read('pingpung/VERSION'),
@@ -38,8 +36,7 @@ setup(name='PingPung',
       license="GPLv2",
       keywords="ping networking network testing",
       packages=["pingpung",
-                "pingpung.pplib",
-               ],
+                "pingpung.pplib"],
       options=dict(build_exe=exe_build_options,
                    ),
       long_description=read('README.md'),

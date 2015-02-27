@@ -6,6 +6,8 @@ from PyQt4 import QtCore, QtGui
 from pingpung import pingpung as pp
 
 __author__ = 'Josh Price'
+
+
 class TestPingPung(TestCase):
     def setUp(self):
         '''Create the GUI'''

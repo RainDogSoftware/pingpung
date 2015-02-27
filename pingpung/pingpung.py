@@ -49,8 +49,8 @@ class PingThread(QtCore.QThread):
             tab_id: The ID number of the tab which sent the ping
             start_num:  The sequence number to begin with.  Allows pause/resume functionality
 
-        The results of a ping are sent via Qt Signals.  Errors initializing the ping are sent with a string describing the
-        error, while the complete ping signal (including timeouts and such) includes a dictionary with the detailed results,
+        The results of a ping are sent via Qt Signals. Errors starting the ping are sent with a string describing the
+        error, while the complete ping signal (including timeouts and such) includes a dict with the detailed results,
         as provided by the ping library in use.
         :return:
         """
@@ -179,7 +179,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.ping_count_line.returnPressed.connect(lambda: self._run_button_action(tab_ui))
         tab_ui.interval_line.returnPressed.connect(lambda: self._run_button_action(tab_ui))
         tab_ui.toggle_start.clicked.connect(lambda: self._run_button_action(tab_ui))
-        tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
+        tab_ui.toggle_start.setStyleSheet("background-color: #66EE66")
 
         # Connect the clear/save log buttons to actions
         tab_ui.clear_log_button.clicked.connect(lambda: self._clear_log(tab_ui))
@@ -210,7 +210,8 @@ class PingPung(QtGui.QMainWindow):
             self.tabs.pop(tab_ui.tab_id)            # Clear it from tabs dictionary
             tab_ui = None                           # Being thorough. I've had trouble predicting Qt's garbage collector
 
-    def copy_stats(self, stat_dict):
+    @staticmethod
+    def copy_stats(stat_dict):
         # Yeah, I have no idea why I thought all that previous work here was necessary.  I went to great length to
         # pull the data from the qt table... when the exact same data is already in a simple stats dictionary.
         result = "\n".join(["{:s}: {:s}".format(x, str(y)) for x,y in stat_dict.items() if len(x) > 1])

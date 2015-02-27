@@ -120,6 +120,9 @@
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
       </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
       <property name="plainText">
        <string>Python3/PyGtk4 multiplatform, multithreaded graphical ping application.  
 
