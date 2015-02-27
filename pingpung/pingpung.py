@@ -34,7 +34,7 @@ class PingThread(QtCore.QThread):
     A QThread subclass for running the pings.
     """
 
-    def __init__(self, ip, ping_count, interval, packet_size, tab_id, start_num):
+    def __init__(self, ip, ping_count, interval, packet_size, tab_id, start_num, timeout=5000):
         """
         :param args:
             ip: The IP address or domain name of the target
@@ -56,6 +56,7 @@ class PingThread(QtCore.QThread):
         self.packet_size = int(packet_size)
         self.tab_id = int(tab_id)
         self.start_num = start_num
+        self.timeout = timeout
 
     def run(self):
         seq_num = self.start_num
@@ -66,7 +67,7 @@ class PingThread(QtCore.QThread):
                 seq_num = 0
 
             try:
-                self.result = pping.ping(self.ip, 5000, seq_num, self.packet_size)
+                self.result = pping.ping(self.ip, self.timeout, seq_num, self.packet_size)
             except ValueError:
                 self.emit(QtCore.SIGNAL('error'), _("Invalid input"))
                 break
@@ -268,7 +269,7 @@ class PingPung(QtGui.QMainWindow):
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_success.isChecked():
                 audio.play("data/woohoo.wav")
         else:
-            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(128, 0, 0))
+            self.ui.tab_bar.tabBar().setTabTextColor(index, QtGui.QColor(255, 64, 64))
             output = self.format_output_failure(result)
             if tab_ui.toggle_audio.isChecked() and tab_ui.alert_failure.isChecked():
                 audio.play("data/doh.wav")
@@ -404,7 +405,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Don't bother trying to clean/speed this up by putting a single <strong> tag around all lines at once, the gui
         # will only apply it to that one line.  Means we've got to <strong> each line individually.
-        [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x, y in sd.items()]
+        [ot.append("<strong>{:s}: {:s}</strong>".format(x, str(y))) for x, y in sd.items()]
 
     def _set_inactive(self, tab_id):
         """
