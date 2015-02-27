@@ -1,20 +1,4 @@
----- 0.0.4
-Total gui revamp using Qt Designer instead of direct code
-Turned stats display into table
-Changed Start/Stop to single toggled button
-Added gettext-based translation
-removed herobrine
-
----- 0.0.3
-
-created changelog
-added ability for more input fields to start ping when enter hit
-added call to stop_ping when start_ping was run
-added icon
-greatly improved windows packaging system
-added text coloration to indicate tab ping status
-expanded README
-added herobrine
-
+--- 0.1.0
+Removed Herobrine
 
 

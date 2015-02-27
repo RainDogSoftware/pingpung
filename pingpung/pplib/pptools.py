@@ -1,4 +1,3 @@
-__author__ = 'josh'
 from functools import wraps
 
 

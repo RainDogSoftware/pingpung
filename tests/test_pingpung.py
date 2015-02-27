@@ -7,6 +7,9 @@ from pingpung import pingpung as pp
 
 __author__ = 'Josh Price'
 
+# Currently having a problem where unit tests cause segfaults the second time PingPung is instanced because of
+# "unclosed resources" which appear to be in UIC.  Can only do one test until I get this worked out.
+
 
 class TestPingPung(TestCase):
     def setUp(self):
@@ -22,16 +25,6 @@ class TestPingPung(TestCase):
         self.assertTrue(hasattr(self.form, 'tab_button'))
         self.assertTrue(hasattr(self.form, 'ui'))
         self.assertTrue(hasattr(self.form.ui, 'tab_bar'))
-
-        pass
-
-    def test_add_tab(self):
-        pass
-
-    def test_woozle_wozzle(self):
-        pass
-
-    def tearDown(self):
         pass
 
 if __name__ == "__main__":
