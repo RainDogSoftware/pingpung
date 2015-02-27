@@ -42,6 +42,12 @@ setup(name='PingPung',
                    ),
       long_description=long,
       executables=executables,
+      entry_points={
+
+        'gui_scripts': [
+            'pingpung = pingpung',
+        ]
+    }
       classifiers=[
       "Development Status :: 3 - Alpha",
       "Topic :: Utilities",
