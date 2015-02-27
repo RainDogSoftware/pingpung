@@ -28,33 +28,62 @@
     <div id="content-wrapper">
       <div class="inner clearfix">
         <section id="main-content">
-          <h3>
-<a name="pingpung" class="anchor" href="#pingpung"><span class="octicon octicon-link"></span></a>PingPung</h3>
+          <h3><a name="pingpung" class="anchor" href="#pingpung"><span class="octicon octicon-link"></span></a>PingPung</h3>
+          <p>PingPung is a multi-platform graphical ping utility.</p>
+          <a href="images/ppscreenshot.png"><img src="images/ppscreenshot.png"></a>
 
-<p>PingPung is a multi-platform graphical ping utility.</p>
-<a href="images/ppscreenshot.png"><img src="images/ppscreenshot.png"></a>
+          <h2>Features</h2>
+          <ul>
+            <li>Multithreaded.  Can theoretically run over 65,000 simultaneous ping sockets without conflict</li>
+            <li>Multiplatform.  Runs on anything that can run Python3/PyGtk4</li>
+            <li>Live stats.  No more need to end the ping session to see totals and averages</li>
+            <li>Tabbed layout allows multiple concurrent ping sessions with individual stats and logging</li>
+            <li>Visual indicators (icon) for which tabs have running sessions</li>
+            <li>Visual indicators (color) for which sessions are succeeding/failing</li>
+            <li>Optional audio indicators for successful or failed pings</li>
+            <li>Sessions can be paused, adjusted, and resumed without losings stats and totals</li>
+            <li>More stats than standard ping tools</li>
+            <li>Gluten free!</li>
+          </ul>
 
-<h2>Installation</h2>
-    <h3>Windows</h3>
-        <p>The Windows package is a ZIP file containing the executable and all its dependencies, including Qt4.  You just download and extract the ZIP anywhere you'd like, and run the (32 bit) exe file inside. </p>
+          <h2>Installation</h2>
+          <h3>Windows</h3>
+          <p>The Windows package is a ZIP file containing the executable and all its dependencies, including Qt4.  You just download and extract the ZIP anywhere you'd like, and run the (32 bit) exe file inside. </p>
 
-    <h3>Linux/Other *nix</h3>
-    <h4>Dependencies</h4>
-       <p>Pingpung only needs 2 things - Python 3 and PyQt4 </p>
-       <p>Unfortunately for all of us, PyQt4 is not installable via pip, and therefore cannot be auto-installed as a PingPung dependency.  You'll have to install PyQt4 using whatever method your distribution supports.  For Debian/Ubuntu users, this is just  </p>
-       <pre><code>sudo apt-get install python3-pyqt4</code></pre>
+          <h3>Linux/Other *nix</h3>
+          <h4>Dependencies</h4>
+          <p>Pingpung only needs 2 things - Python 3 and PyQt4 </p>
+          <p>Unfortunately for all of us, PyQt4 is not installable via pip, and therefore cannot be auto-installed as a PingPung dependency.  You'll have to install PyQt4 using whatever method your distribution supports.  For Debian/Ubuntu users, this is just  </p>
+          <pre><code>sudo apt-get install python3-pyqt4</code></pre>
 
-    <h4>Python Package Index</h4>
-        <p>The simplest method is to run the install via 'pip', as in</p>
-        <pre><code>pip install pingpung</code></pre>
-        <p>and assuming you've got the dependencies above, just run the app with </p>
-        <pre><code>pingpung</code></pre>
+          <h4>Python Package Index</h4>
+          <p>The simplest method is to run the install via 'pip', as in</p>
+          <pre><code>pip install pingpung</code>(coming soon)</pre>
+          <p>and assuming you've got the dependencies above, just run the app with </p>
+          <pre><code>sudo pingpung</code></pre>
+          <p><a href="#root">Why does PingPung need root?</a></p>
 
-    <h4>Run from Source</h4>
-        <p>If you wish, you can always just fetch the source code and run it from there.  Install dependencies as described above.  You'll need to download it either by 'git clone' or simply downloading the source ZIP file.   </p>
-        <p>Once you've got the files extracted, just run</p>
-        <pre><code>python3 pingpung.py</code></pre>
+          <h4>Run from Source</h4>
+          <p>If you wish, you can always just fetch the source code and run it from there.  Install dependencies as described above.  You'll need to download it either by 'git clone' or simply downloading the source ZIP file.   </p>
+          <p>Once you've got the files extracted, just run</p>
+          <pre><code>python3 pingpung.py</code></pre>
 
+          <h2>FAQ</h2>
+          <h4>Does PingPung use my operating system's builtin ping utility?</h4>
+          <p>No.  PingPung was written specifically to avoid reliance on any particular OS implementation of 'ping'.  Instead, the library in use was adapted from an existing Python 3 console application which can be found here <a href="http://www.falatic.com/index.php/39/pinging-with-python" target="_blank">http://www.falatic.com/index.php/39/pinging-with-python</a></p>
+          <p>Because of this, PingPung requires root/admin privileges to run.  For details see below.</p>
+
+          <a name="root"></a>
+          <h4>Why does PingPung require root privileges?</h4>
+          <p>Creating a raw socket with which to craft a ping packet is a fairly low-level operation.  Any IP-network capable operating system has a builtin ping program, and part of the reason for that is because the OS maker can <a href="http://en.wikipedia.org/wiki/Setuid">setuid</a> that program so the user doesn't need to have those privileges to run it.</p>
+          <p>Technical stuff aside, it's because PingPung is designed to use its <em>own</em> ping system, not your operating system's, so it doesn't have the built-in permissions that your OS's ping program does.</p>
+          <p>Feel free to inspect the code if you have any concerns.</p>
+
+          <h4>Why use Qt?</h4>
+          <p>To be perfectly honest, it was simply because I had never used it, but had heard mostly good things about Qt's quality as a toolkit.  So far, I like most of it.</p>
+
+          <h4>What is love?</h4>
+          <p>Much like an M.L.T.  Or so I'm told.</p>
 
         </section>
 
@@ -75,7 +104,6 @@
         </aside>
       </div>
     </div>
-
-  <p class="footnote">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-  </body>
+    <p class="footnote">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+    </body>
 </html>
