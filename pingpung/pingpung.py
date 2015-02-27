@@ -18,25 +18,20 @@ def read(fname):
 if os.path.isfile('VERSION'):
     __version__ = read('VERSION')
 __date__ = "$Date: 2015/02/27 $"
+__author__ = "Josh Price"
 
+__credits__ = ["Rob Knight", "Peter Maxwell", "Gavin Huttley",
+                    "Matthew Wakefield"]
+__license__ = "GPLv2"
+__maintainer__ = "Josh Price"
+__email__ = "Price.Joshuad@gmail.com"
+__status__ = "Alpha"
 
 ############################################################################################
 # Ping Thread
 class PingThread(QtCore.QThread):
     """
     A QThread subclass for running the pings.
-    :param
-    :return:
-
-    Args:
-        ip - the IP address or domain name of the target to ping
-        ping_count - how many times to run this ping before the thread terminates
-        interval - the time to sleep between pings
-        packet_size - number of bytes to send per ping
-        tab_id - the ID number of the tab which started the thread.
-            This is used to match ping response to the correct tab.
-
-
     """
 
     def __init__(self, ip, ping_count, interval, packet_size, tab_id, start_num):
