@@ -25,7 +25,7 @@ __date__ = "$Date: 2015/02/27 $"
 class PingThread(QtCore.QThread):
     """
     A QThread subclass for running the pings.
-    :param args:
+    :param
     :return:
 
     Args:
@@ -76,7 +76,7 @@ class PingThread(QtCore.QThread):
                 self.emit(QtCore.SIGNAL('error'), _("Invalid input"))
                 break
             except pping.SocketError:
-                self.emit(QtCore.SIGNAL('error'), _("Socket Error.  Check ip/domain and be certain app is running as root/admin"))
+                self.emit(QtCore.SIGNAL('error'), _("Error.  Verify that we're running as root/admin.  See README.md"))
                 break
             except pping.AddressError:
                 self.emit(QtCore.SIGNAL('error'), _("Address error.  Check IP/domain setting."))
@@ -89,14 +89,14 @@ class PingThread(QtCore.QThread):
 
 ############################################################################################
 # Main
+
 class PingPung(QtGui.QMainWindow):
     ############################################################################################
     # UI Setup
     def __init__(self):
-        #app = QtGui.QApplication(sys.argv)
         super(PingPung, self).__init__()
-        FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/maingui.ui")
-        self.ui = uic.loadUi(FILEPATH)
+        filepath = os.path.join(os.path.dirname(__file__), "ppui/maingui.ui")
+        self.ui = uic.loadUi(filepath)
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
         # id number, as assigned by the counter below.  It's worth noting that this is because index number in tab
@@ -120,14 +120,13 @@ class PingPung(QtGui.QMainWindow):
         # Always start with one tab
         self._new_tab()
 
-
     def _show_about(self):
         """
         Loads and displays the About page of the UI
         :return:
         """
-        FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/about.ui")
-        self.about = uic.loadUi(FILEPATH)
+        filepath = os.path.join(os.path.dirname(__file__), "ppui/about.ui")
+        self.about = uic.loadUi(filepath)
         self.about.version_label.setText(read('VERSION'))
         self.about.show()
 
@@ -144,7 +143,6 @@ class PingPung(QtGui.QMainWindow):
         self.connect(sender, QtCore.SIGNAL('set_state_active'), self._set_active)
         self.connect(sender, QtCore.SIGNAL('suite_complete'), self._suite_complete)
 
-
     ############################################################################################
     # Tab management
 
@@ -157,8 +155,8 @@ class PingPung(QtGui.QMainWindow):
         """
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
         # As noted above, tabs must have an unchanging ID number for thread support
-        FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/pptab.ui")
-        tab_ui = uic.loadUi(FILEPATH)
+        filepath = os.path.join(os.path.dirname(__file__), "ppui/pptab.ui")
+        tab_ui = uic.loadUi(filepath)
         tab_ui.tab_id = next(self.counter_iter)
         tab_ui.last_num = -1
 
@@ -214,7 +212,7 @@ class PingPung(QtGui.QMainWindow):
     def copy_stats(stat_dict):
         # Yeah, I have no idea why I thought all that previous work here was necessary.  I went to great length to
         # pull the data from the qt table... when the exact same data is already in a simple stats dictionary.
-        result = "\n".join(["{:s}: {:s}".format(x, str(y)) for x,y in stat_dict.items() if len(x) > 1])
+        result = "\n".join(["{:s}: {:s}".format(x, str(y)) for x, y in stat_dict.items() if len(x) > 1])
         clipboard = QtGui.QApplication.clipboard()
         clipboard.setText(result)
 
@@ -224,7 +222,6 @@ class PingPung(QtGui.QMainWindow):
 
     ############################################################################################
     # Stats & Data
-
     def _clear_log(self, tab_ui):
         """
         Clear the main output window, stat data dict, reset ping sequence number,  reset stats display table
@@ -234,7 +231,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.output_textedit.clear()
         tab_ui.stat_dict = self.get_default_stats()
         tab_ui.last_num = -1
-        tab_ui.avg_table = [0,0] # Indicate no pings this session
+        tab_ui.avg_table = [0, 0]  # Indicate no pings this session
         self._refresh_stat_display(tab_ui)
 
     def _save_log(self, tab_ui):
@@ -398,7 +395,7 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.output_textedit.append(_("<strong>Test Suite Complete</strong>"))
         self.write_stats(tab_ui)
 
-        tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
+        tab_ui.last_num = -1  # so sequence will start from 0 on next suite start
         self._set_inactive(tab_id)
 
     def write_stats(self, tab_ui):
@@ -412,7 +409,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Don't bother trying to clean/speed this up by putting a single <strong> tag around all lines at once, the gui
         # will only apply it to that one line.  Means we've got to <strong> each line individually.
-        [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x,y in sd.items()]
+        [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x, y in sd.items()]
 
     def _set_inactive(self, tab_id):
         """
