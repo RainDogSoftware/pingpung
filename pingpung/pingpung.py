@@ -478,8 +478,11 @@ class PingPung(QtGui.QMainWindow):
         else:
             self.ui.tab_bar.setTabText(index, " - ".join([ip, label]))
 
-if __name__ == "__main__":
+def launch():
     app = QtGui.QApplication(sys.argv)
     pp = PingPung()
     pp.ui.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    launch()
