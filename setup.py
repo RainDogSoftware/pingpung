@@ -20,7 +20,7 @@ sys.path.append("pingpung/data")
 
 
 exe_build_options = dict(path=sys.path,
-                         include_files=["pingpung/data", "pingpung/ppui"],
+                         include_files=["pingpung/data", "pingpung/ppui", "pingpung/VERSION", "README.md"],
                          icon='pingpung/data/icon.ico',
                          excludes=["tkinter"],
                          base='Win32GUI')

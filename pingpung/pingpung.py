@@ -13,7 +13,7 @@ from pplib.pptools import debug
 
 # Helper function
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname("__file__"), fname)).read()
 
 if os.path.isfile('VERSION'):
     __version__ = read('VERSION')
@@ -91,7 +91,7 @@ class PingPung(QtGui.QMainWindow):
     # UI Setup
     def __init__(self):
         super(PingPung, self).__init__()
-        filepath = os.path.join(os.path.dirname(__file__), "ppui/maingui.ui")
+        filepath = os.path.join(os.path.dirname("__file__"), "ppui/maingui.ui")
         self.ui = uic.loadUi(filepath)
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
@@ -121,7 +121,7 @@ class PingPung(QtGui.QMainWindow):
         Loads and displays the About page of the UI
         :return:
         """
-        filepath = os.path.join(os.path.dirname(__file__), "ppui/about.ui")
+        filepath = os.path.join(os.path.dirname("__file__"), "ppui/about.ui")
         self.about = uic.loadUi(filepath)
         self.about.version_label.setText(read('VERSION'))
         self.about.show()
@@ -151,7 +151,7 @@ class PingPung(QtGui.QMainWindow):
         """
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
         # As noted above, tabs must have an unchanging ID number for thread support
-        filepath = os.path.join(os.path.dirname(__file__), "ppui/pptab.ui")
+        filepath = os.path.join(os.path.dirname("__file__"), "ppui/pptab.ui")
         tab_ui = uic.loadUi(filepath)
         tab_ui.tab_id = next(self.counter_iter)
         tab_ui.last_num = -1
@@ -405,7 +405,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Don't bother trying to clean/speed this up by putting a single <strong> tag around all lines at once, the gui
         # will only apply it to that one line.  Means we've got to <strong> each line individually.
-        [ot.append("<strong>{:s}: {:s}</strong>".format(x, str(y))) for x, y in sd.items()]
+        [ot.append("<strong>{:s}: {:s}</strong>".format(x, str(y))) for x, y in sd.items() if len(x) > 1]
 
     def _set_inactive(self, tab_id):
         """
