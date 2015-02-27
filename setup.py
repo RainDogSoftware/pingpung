@@ -12,7 +12,7 @@ except ImportError:
     executables = None
 
 # This is an ugly hack which allows me to use setuptools' setup method instead of cx_freeze when TESTING on Windows
-if sys.argv[1] == "test":
+if sys.platform == "win32" and sys.argv[1] == "test":
     from setuptools import setup
 
 sys.path.append("pingpung")

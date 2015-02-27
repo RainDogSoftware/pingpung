@@ -10,9 +10,15 @@ from PyQt4 import QtCore, QtGui, uic
 from pplib import pping, audio
 from pplib.pptools import debug
 
+
 # Helper function
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+if os.path.isfile('VERSION'):
+    __version__ = read('VERSION')
+__date__ = "$Date: 2015/02/27 $"
+
 
 ############################################################################################
 # Ping Thread
@@ -87,7 +93,7 @@ class PingPung(QtGui.QMainWindow):
     ############################################################################################
     # UI Setup
     def __init__(self):
-        app = QtGui.QApplication(sys.argv)
+        #app = QtGui.QApplication(sys.argv)
         super(PingPung, self).__init__()
         FILEPATH = os.path.join(os.path.dirname(__file__), "ppui/maingui.ui")
         self.ui = uic.loadUi(FILEPATH)
@@ -113,6 +119,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Always start with one tab
         self._new_tab()
+
 
     def _show_about(self):
         """
@@ -184,6 +191,7 @@ class PingPung(QtGui.QMainWindow):
         # Until I can figure out how to make copy/paste automaticall take whole selection, this is how you copy
         # the complete state total
         tab_ui.copy_stats_button.clicked.connect(lambda: self.copy_stats(tab_ui.stats_table))
+        tab_ui.send_stats_button.clicked.connect(lambda: self.write_stats(tab_ui))
 
         # Always start with one tab
         self.ui.tab_bar.addTab(tab_ui, _("New Tab"))
@@ -220,7 +228,6 @@ class PingPung(QtGui.QMainWindow):
 
     def _get_index(self, tab_ui):
         return self.ui.tab_bar.indexOf(tab_ui)
-
 
     ############################################################################################
     # Stats & Data
@@ -396,18 +403,24 @@ class PingPung(QtGui.QMainWindow):
         :return:
         """
         tab_ui = self.tabs[tab_id]
+        tab_ui.output_textedit.append(_("<strong>Test Suite Complete</strong>"))
+        self.write_stats(tab_ui)
 
+        tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
+        self._set_inactive(tab_id)
+
+    def write_stats(self, tab_ui):
+        """
+        Writes the stats to the screen
+        :param tab_ui: the tab instance to work on
+        """
         # Some shorter variable names for brevity in upcoming list comprehension
         sd = tab_ui.stat_dict
         ot = tab_ui.output_textedit
 
         # Don't bother trying to clean/speed this up by putting a single <strong> tag around all lines at once, the gui
         # will only apply it to that one line.  Means we've got to <strong> each line individually.
-        ot.append(_("<strong>Test Suite Complete</strong>"))
         [ot.append("<strong>{:s} {:s}</strong>".format(x, str(y))) for x,y in sd.items()]
-
-        tab_ui.last_num = -1 # so sequence will start from 0 on next suite start
-        self._set_inactive(tab_id)
 
     def _set_inactive(self, tab_id):
         """
@@ -466,11 +479,12 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.output_textedit.append(_("Starting..."))
         tab_ui.thread = PingThread(ip, ping_count, interval, packet_size, tab_ui.tab_id, seq_num)
         self._connect_slots(tab_ui.thread)
+
         # Not in a try/except block because the thread does its own error checking and reports via signals
         tab_ui.thread.start()
 
         tab_ui.toggle_start.setText(_("Pause"))
-        tab_ui.toggle_start.setStyleSheet("background-color: #DD8888")
+        tab_ui.toggle_start.setStyleSheet("background-color: #EE6666")
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon("data/play.ico"))
 
         # No sense placing a hyphen if there's nothing on the other side
@@ -479,8 +493,8 @@ class PingPung(QtGui.QMainWindow):
         else:
             self.ui.tab_bar.setTabText(index, " - ".join([ip, label]))
 
-if __name__ == '__main__':
-    pp = PingPung()
+if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
+    pp = PingPung()
     pp.ui.show()
     sys.exit(app.exec_())

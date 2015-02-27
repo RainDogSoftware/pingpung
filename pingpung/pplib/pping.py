@@ -39,7 +39,7 @@
   
     Revision history
     ~~~~~~~~~~~~~~~~
-    November 2013
+    February 2015
     --------------
     Large overhaul to turn this application into a library for PingPung
     https://github.com/RainDogSoftware/pingpung
