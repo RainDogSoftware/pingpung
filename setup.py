@@ -19,29 +19,28 @@ sys.path.append("pingpung")
 sys.path.append("pingpung/data")
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
 exe_build_options = dict(path=sys.path,
                          include_files=["pingpung/data", "pingpung/ppui"],
                          icon='pingpung/data/icon.ico',
                          excludes=["tkinter"],
                          base='Win32GUI')
 
+long = "PingPung is intended to fill the niche of a truly multiplatform graphical ping application.  Unlike other desktop ping utilities, it does NOT use your operating system's builtin 'ping' program at all.  Instead, it uses a pure Python 3 library which creates its own socket.  **Because of this, it will require root privileges on many platforms.** If you're uncomfortable with that, there are many other platform-specific graphical ping apps out there which do not require root (because they're just wrappers around the OS's existing ping util)."
+
 setup(name='PingPung',
-      version="0.1.1",
+      version="0.1.2",
       author="Josh Price",
       author_email="Price.JoshuaD@Gmail.com",
       description='Python3/QT4 Multiplatform Ping Application',
       license="GPLv2",
       url = 'https://github.com/RainDogSoftware/pingpung/',
-      download_url = 'https://github.com/RainDogSoftware/pingpung/tarball/0.1.0',
+      download_url = 'https://github.com/RainDogSoftware/pingpung/tarball/0.1.2',
       keywords="ping networking network testing",
       packages=["pingpung",
                 "pingpung.pplib"],
       options=dict(build_exe=exe_build_options,
                    ),
-      long_description=read('README.md'),
+      long_description=long,
       executables=executables,
       classifiers=[
       "Development Status :: 3 - Alpha",
