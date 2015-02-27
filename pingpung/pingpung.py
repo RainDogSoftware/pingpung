@@ -190,7 +190,7 @@ class PingPung(QtGui.QMainWindow):
 
         # Until I can figure out how to make copy/paste automaticall take whole selection, this is how you copy
         # the complete state total
-        tab_ui.copy_stats_button.clicked.connect(lambda: self.copy_stats(tab_ui.stats_table))
+        tab_ui.copy_stats_button.clicked.connect(lambda: self.copy_stats(tab_ui.stat_dict))
         tab_ui.send_stats_button.clicked.connect(lambda: self.write_stats(tab_ui))
 
         # Always start with one tab
@@ -210,21 +210,13 @@ class PingPung(QtGui.QMainWindow):
             self.tabs.pop(tab_ui.tab_id)            # Clear it from tabs dictionary
             tab_ui = None                           # Being thorough. I've had trouble predicting Qt's garbage collector
 
-    def copy_stats(self, stats):
-        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0, 0, 11, 1), True)
-        selected = [x for x in stats.selectedItems()]
-        stats.setRangeSelected(QtGui.QTableWidgetSelectionRange(0, 0, 11, 1), False)
-
-        resorted = self._recombine_list(selected)
-        result = "\n".join([item.text() for item in resorted])
+    def copy_stats(self, stat_dict):
+        # Yeah, I have no idea why I thought all that previous work here was necessary.  I went to great length to
+        # pull the data from the qt table... when the exact same data is already in a simple stats dictionary.
+        result = "\n".join(["{:s}: {:s}".format(x, str(y)) for x,y in stat_dict.items() if len(x) > 1])
         clipboard = QtGui.QApplication.clipboard()
         clipboard.setText(result)
 
-    def _recombine_list(self, a_list):
-        # This shouldn't be necessary.  I'm either selecting wrong from the table or missing the more obvious
-        # way to combine the lists
-        half = int(len(a_list)/2)
-        return [item for sublist in zip(a_list[:half],a_list[half:]) for item in sublist]
 
     def _get_index(self, tab_ui):
         return self.ui.tab_bar.indexOf(tab_ui)
@@ -377,7 +369,7 @@ class PingPung(QtGui.QMainWindow):
             elif result["Delay"] < low:
                 tab_ui.stat_dict["Lowest Latency"] = delay
 
-            # The average table is a 2-item list.  The first item contains the number of successful pings (makes no sense
+            # The average table is a 2-item list. The first item contains the number of successful pings (makes no sense
             # to count latency on a ping that never returned) and the second is the total latency for all those pings
             # combined.  Divide latency total by count, and we've got our average.
             tab_ui.avg_table[0] += 1
@@ -390,7 +382,6 @@ class PingPung(QtGui.QMainWindow):
         tab_ui.stat_dict["% Success"] = round((tab_ui.stat_dict["Success"] / (tab_ui.stat_dict["Failure"] +
                                                                               tab_ui.stat_dict["Success"])) * 100, 2)
         self._refresh_stat_display(tab_ui)
-
 
     ############################################################################################
     # Ping Management
@@ -430,7 +421,7 @@ class PingPung(QtGui.QMainWindow):
         """
         tab_ui = self.tabs[tab_id]
         tab_ui.toggle_start.setText(_("Start"))
-        tab_ui.toggle_start.setStyleSheet("background-color: #88DD88")
+        tab_ui.toggle_start.setStyleSheet("background-color: #66EE66")
         index = self._get_index(tab_ui)
         self.ui.tab_bar.setTabIcon(index, QtGui.QIcon(""))
 
