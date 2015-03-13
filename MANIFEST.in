@@ -1,2 +1,2 @@
-recursive-include pingpung/data *
-recursive-include pingpung/ppui *
+include pingpung/data/*
+include pingpung/ppui/*
