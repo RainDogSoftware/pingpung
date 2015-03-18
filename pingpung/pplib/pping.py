@@ -261,7 +261,7 @@ def ping(dest_ip, timeout, seq_number, num_data_bytes):
     """
     Core pping function.
     """
-  
+
     try:  # One could use UDP here
         this_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
     except socket.error:

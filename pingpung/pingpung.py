@@ -7,14 +7,21 @@ from gettext import gettext as _
 
 from PyQt4 import QtCore, QtGui, uic
 
-from pingpung import pplib
-#from pplib.pptools import debug
+# Unfortunate, but necessary workaround for Windows builds
+try:
+    approot = __file__
+except NameError:  # Building for Windows with cx_freeze
+    approot = "__file__"
 
-sys.path.append("pingpung")
+from pingpung import pplib
+from pingpung.pplib import pping
+from pingpung.pplib import audio
+
+#sys.path.append("pingpung")
 
 # Helper function
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(approot), fname)).read()
 
 if os.path.isfile('VERSION'):
     __version__ = read('VERSION')
@@ -27,6 +34,7 @@ __license__ = "GPLv2"
 __maintainer__ = "Josh Price"
 __email__ = "Price.Joshuad@gmail.com"
 __status__ = "Alpha"
+
 
 ############################################################################################
 # Ping Thread
@@ -68,14 +76,14 @@ class PingThread(QtCore.QThread):
                 seq_num = 0
 
             try:
-                self.result = pplib.pping.ping(self.ip, self.timeout, seq_num, self.packet_size)
+                self.result = pping.ping(self.ip, self.timeout, seq_num, self.packet_size)
             except ValueError:
                 self.emit(QtCore.SIGNAL('error'), _("Invalid input"))
                 break
-            except pplib.pping.SocketError:
+            except pping.SocketError:
                 self.emit(QtCore.SIGNAL('error'), _("Error.  Verify that we're running as root/admin.  See README.md"))
                 break
-            except pplib.pping.AddressError:
+            except pping.AddressError:
                 self.emit(QtCore.SIGNAL('error'), _("Address error.  Check IP/domain setting."))
                 break
 
@@ -92,7 +100,7 @@ class PingPung(QtGui.QMainWindow):
     # UI Setup
     def __init__(self):
         super(PingPung, self).__init__()
-        filepath = os.path.join(os.path.dirname(__file__), "ppui/maingui.ui")
+        filepath = os.path.join(os.path.dirname(approot), "ppui/maingui.ui")
         self.ui = uic.loadUi(filepath)
 
         # Preparing to handle multiple tabs of pings.  We keep a dict in self.tabs so that they can be referenced by
@@ -122,7 +130,7 @@ class PingPung(QtGui.QMainWindow):
         Loads and displays the About page of the UI
         :return:
         """
-        filepath = os.path.join(os.path.dirname(__file__), "ppui/about.ui")
+        filepath = os.path.join(os.path.dirname(approot), "ppui/about.ui")
         self.about = uic.loadUi(filepath)
         self.about.version_label.setText(read('VERSION'))
         self.about.show()
@@ -152,7 +160,7 @@ class PingPung(QtGui.QMainWindow):
         """
         # Tab contents are in their own object, as each tab needs to operate independently of the others in all cases.
         # As noted above, tabs must have an unchanging ID number for thread support
-        filepath = os.path.join(os.path.dirname(__file__), "ppui/pptab.ui")
+        filepath = os.path.join(os.path.dirname(approot), "ppui/pptab.ui")
         tab_ui = uic.loadUi(filepath)
         tab_ui.tab_id = next(self.counter_iter)
         tab_ui.last_num = -1
