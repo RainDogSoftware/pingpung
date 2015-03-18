@@ -7,32 +7,17 @@ from gettext import gettext as _
 
 from PyQt4 import QtCore, QtGui, uic
 
-# Unfortunate, but necessary workaround for Windows builds
-try:
-    approot = __file__
-except NameError:  # Building for Windows with cx_freeze
-    approot = "__file__"
-
 from pingpung import pplib
 from pingpung.pplib import pping
 from pingpung.pplib import audio
 
-#sys.path.append("pingpung")
-
-# Helper function
-def read(fname):
-    return open(os.path.join(os.path.dirname(approot), fname)).read()
-
-if os.path.isfile('VERSION'):
-    __version__ = read('VERSION')
-__date__ = "$Date: 2015/02/27 $"
+__date__ = "$Date: 2015/03/17 $"
 __author__ = "Josh Price"
-
 __credits__ = ["Rob Knight", "Peter Maxwell", "Gavin Huttley",
                     "Matthew Wakefield"]
 __license__ = "GPLv2"
 __maintainer__ = "Josh Price"
-__email__ = "Price.Joshuad@gmail.com"
+__email__ = "Price.Joshuad+PingPung@gmail.com"
 __status__ = "Alpha"
 
 
@@ -132,7 +117,7 @@ class PingPung(QtGui.QMainWindow):
         """
         filepath = os.path.join(os.path.dirname(approot), "ppui/about.ui")
         self.about = uic.loadUi(filepath)
-        self.about.version_label.setText(read('VERSION'))
+        self.about.version_label.setText(__version__)
         self.about.show()
 
     def _run_button_action(self, tab_ui):
@@ -492,6 +477,21 @@ def launch():
     pp = PingPung()
     pp.ui.show()
     sys.exit(app.exec_())
+
+# Helper function
+def read(fname):
+    return open(os.path.join(os.path.dirname(approot), fname)).read()
+
+if os.path.isfile('VERSION'):
+    __version__ = read('VERSION')
+else:
+    __version__ = "0.1.10"
+
+# Unfortunate, but necessary workaround for Windows exe builds
+try:
+    approot = __file__
+except NameError:  # Building for Windows with cx_freeze
+    approot = "__file__"
 
 if __name__ == "__main__":
     launch()

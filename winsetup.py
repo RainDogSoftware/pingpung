@@ -1,5 +1,4 @@
 import sys
-
 import shared
 
 from cx_Freeze import setup

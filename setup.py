@@ -1,13 +1,10 @@
 import sys
-import os
 import shared
 
 from setuptools import setup
 
 sys.path.append("pingpung")
 sys.path.append("pingpung/data")
-
-
 
 setup(name=shared.name,
       version=shared.version,
@@ -25,6 +22,7 @@ setup(name=shared.name,
       package_data = {
         '': ['VERSION'],
         '': ['ppui/*'],
+        '': ['shared.py'],
         'ppui': ['*'],
       },
       classifiers=shared.classifiers,
