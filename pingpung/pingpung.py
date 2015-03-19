@@ -478,6 +478,12 @@ def launch():
     pp.ui.show()
     sys.exit(app.exec_())
 
+# Unfortunate, but necessary workaround for Windows exe builds
+try:
+    approot = __file__
+except NameError:  # Building for Windows with cx_freeze
+    approot = "__file__"
+
 # Helper function
 def read(fname):
     return open(os.path.join(os.path.dirname(approot), fname)).read()
@@ -485,13 +491,7 @@ def read(fname):
 if os.path.isfile('VERSION'):
     __version__ = read('VERSION')
 else:
-    __version__ = "0.1.10"
-
-# Unfortunate, but necessary workaround for Windows exe builds
-try:
-    approot = __file__
-except NameError:  # Building for Windows with cx_freeze
-    approot = "__file__"
+    __version__ = "0.1 - Unknown Build"
 
 if __name__ == "__main__":
     launch()
