@@ -15,7 +15,13 @@ separately.  On Debian/Ubuntu, for example, it's as simple as
 
 If you intend to build for Windows, you'll also need to install cx_freeze by any method you choose, and build with
     
-    python setup.py build_exe
+    python winsetup.py build_exe
 
 The ping library in use was derived from a standalone application found here
 http://www.falatic.com/index.php/39/pinging-with-python
+
+### Installation
+PingPung is a Python 3 application, and for any system with Python 3, it's just
+
+    pip3 install pingpung
+
