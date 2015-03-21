@@ -25,3 +25,4 @@ PingPung is a Python 3 application, and for any system with Python 3, it's just
 
     pip3 install pingpung
 
+Windows users can download the Windows ZIP file linked on our website <https://raindogsoftware.github.io/pingpung/>
